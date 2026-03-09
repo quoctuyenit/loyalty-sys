@@ -1,38 +1,45 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import { customers, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "@shared/schema";
+import { eq, ilike } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getCustomers(search?: string): Promise<Customer[]>;
+  getCustomer(id: string): Promise<Customer | undefined>;
+  getCustomerByPhone(phone: string): Promise<Customer | undefined>;
+  createCustomer(customer: CreateCustomerRequest): Promise<Customer>;
+  updateCustomer(id: string, updates: UpdateCustomerRequest): Promise<Customer>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getCustomers(search?: string): Promise<Customer[]> {
+    if (search) {
+      return await db.select().from(customers).where(ilike(customers.phone, `%${search}%`));
+    }
+    return await db.select().from(customers);
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getCustomer(id: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getCustomerByPhone(phone: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.phone, phone));
+    return customer;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createCustomer(customer: CreateCustomerRequest): Promise<Customer> {
+    const [created] = await db.insert(customers).values(customer).returning();
+    return created;
+  }
+
+  async updateCustomer(id: string, updates: UpdateCustomerRequest): Promise<Customer> {
+    const [updated] = await db.update(customers)
+      .set(updates)
+      .where(eq(customers.id, id))
+      .returning();
+    return updated;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
