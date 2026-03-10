@@ -13,8 +13,8 @@
     --background: 0 0% 98%; /* #fafafa */
     --foreground: 220 20% 15%;
     
-    /* Primary: #2e7d32 */
-    --primary: 125 46% 33%;
+    /* Primary: Blue #2563eb */
+    --primary: 217 91% 55%;
     --primary-foreground: 0 0% 100%;
     
     /* Reward/Accent: #ff9800 */
@@ -27,8 +27,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 15%;
     
-    --secondary: 125 20% 92%;
-    --secondary-foreground: 125 46% 33%;
+    --secondary: 217 91% 90%;
+    --secondary-foreground: 217 91% 55%;
     
     --muted: 220 15% 94%;
     --muted-foreground: 220 10% 50%;
@@ -38,7 +38,7 @@
 
     --border: 220 15% 90%;
     --input: 220 15% 90%;
-    --ring: 125 46% 33%;
+    --ring: 217 91% 55%;
 
     --radius: 1rem;
   }
