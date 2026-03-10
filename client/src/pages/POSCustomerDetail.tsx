@@ -19,6 +19,9 @@ export function POSCustomerDetail() {
   
   const [showQR, setShowQR] = useState(false);
   const [customPoints, setCustomPoints] = useState("");
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editName, setEditName] = useState(customer?.name || "");
+  const [editPhone, setEditPhone] = useState(customer?.phone || "");
 
   if (isLoading || !customer) {
     return (
@@ -73,6 +76,34 @@ export function POSCustomerDetail() {
     });
   };
 
+  const handleEditSave = () => {
+    if (!editName.trim() || !editPhone.trim()) {
+      toast({
+        title: "Error",
+        description: "Name and phone cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateMutation.mutate(
+      { 
+        id: customer.id, 
+        name: editName,
+        phone: editPhone
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Customer Updated!",
+            description: "Customer details have been saved.",
+          });
+          setShowEditDialog(false);
+        }
+      }
+    );
+  };
+
   return (
     <MobileLayout>
       {/* Top Nav */}
@@ -99,7 +130,16 @@ export function POSCustomerDetail() {
             <h1 className="text-3xl font-display font-bold text-foreground">{customer.name}</h1>
             <p className="text-lg text-muted-foreground mt-1">{customer.phone}</p>
           </div>
-          <Button variant="outline" size="icon" className="rounded-full border-border/50 shadow-sm">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => {
+              setEditName(customer.name);
+              setEditPhone(customer.phone);
+              setShowEditDialog(true);
+            }}
+            className="rounded-full border-border/50 shadow-sm"
+          >
             <Edit3 className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>
@@ -182,6 +222,52 @@ export function POSCustomerDetail() {
           <p className="mt-6 text-center text-muted-foreground font-medium">
             Scan this code at the POS to pull up {customer.name.split(' ')[0]}'s account.
           </p>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[360px] rounded-3xl p-8">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="font-display text-2xl">Edit Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-bold mb-2 text-foreground">Name</label>
+              <input 
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full h-12 rounded-2xl bg-card border border-border/50 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2 text-foreground">Phone</label>
+              <input 
+                type="text"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="w-full h-12 rounded-2xl bg-card border border-border/50 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowEditDialog(false)}
+                disabled={updateMutation.isPending}
+                className="flex-1 h-12 rounded-2xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditSave}
+                disabled={updateMutation.isPending}
+                className="flex-1 h-12 rounded-2xl bg-primary text-white font-bold"
+              >
+                {updateMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </MobileLayout>
