@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, UserPlus, QrCode, ChevronRight, User } from "lucide-react";
+import { Search, UserPlus, QrCode, ChevronRight, User, Settings } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,23 @@ export function POSHome() {
       <div className="bg-primary px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-display font-bold">Loyalty POS</h1>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-primary-foreground hover:bg-primary-foreground/20 rounded-full h-12 w-12"
-          >
-            <QrCode className="w-6 h-6" />
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setLocation("/config")}
+              className="text-primary-foreground hover:bg-primary-foreground/20 rounded-full h-12 w-12"
+            >
+              <Settings className="w-6 h-6" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-primary-foreground hover:bg-primary-foreground/20 rounded-full h-12 w-12"
+            >
+              <QrCode className="w-6 h-6" />
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
