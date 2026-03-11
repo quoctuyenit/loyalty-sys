@@ -1,0 +1,262 @@
+You are a senior full-stack engineer.
+
+I have an existing project built with:
+
+* React
+* Vite
+* Express
+* PostgreSQL
+* Drizzle ORM
+* Express Sessions
+* Passport authentication
+* WebSockets
+
+The project previously attempted to use Google Sheets as a backend, but I no longer want that.
+
+I want to **refactor the entire project architecture to use Vercel + Neon PostgreSQL + Prisma**.
+
+The final project must deploy smoothly to **Vercel**.
+
+---
+
+# Target Architecture
+
+Frontend
+
+* React
+* Vite
+
+Backend
+
+* Vercel Serverless Functions (`/api` folder)
+
+Database
+
+* Neon PostgreSQL
+
+ORM
+
+* Prisma
+
+Authentication
+
+* Simple token/session or basic email/password logic
+* Do not use express-session
+
+---
+
+# Remove Old Backend
+
+Remove all Express-based server code.
+
+Delete or stop using:
+
+* express
+* express-session
+* passport
+* passport-local
+* ws
+* drizzle-orm
+* connect-pg-simple
+* server folder
+* Node server startup files
+
+Remove any references to:
+
+server/index.ts
+server/routes.ts
+Express middleware
+
+---
+
+# Setup Prisma
+
+Install Prisma dependencies.
+
+Add:
+
+prisma
+@prisma/client
+
+Create:
+
+/prisma/schema.prisma
+
+Example structure:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+```
+
+---
+
+# Neon Database Configuration
+
+Use Neon PostgreSQL connection string.
+
+Create `.env`:
+
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+
+Ensure Prisma connects using this environment variable.
+
+---
+
+# Create Prisma Client
+
+Create:
+
+src/lib/prisma.ts
+
+Example:
+
+```ts
+import { PrismaClient } from "@prisma/client"
+
+export const prisma = new PrismaClient()
+```
+
+---
+
+# Create Vercel Serverless API
+
+Create folder:
+
+/api
+
+Move all backend logic into serverless endpoints.
+
+Example:
+
+/api/users.ts
+
+Example implementation:
+
+```ts
+import { prisma } from "../src/lib/prisma"
+
+export default async function handler(req, res) {
+  if (req.method === "GET") {
+    const users = await prisma.user.findMany()
+    return res.status(200).json(users)
+  }
+
+  if (req.method === "POST") {
+    const { email, password } = req.body
+
+    const user = await prisma.user.create({
+      data: { email, password }
+    })
+
+    return res.status(200).json(user)
+  }
+}
+```
+
+---
+
+# Update Frontend API Calls
+
+Replace any calls to:
+
+/api/*
+Express routes
+
+with requests to:
+
+/api/* Vercel serverless endpoints.
+
+Example:
+
+```ts
+await fetch("/api/users")
+```
+
+---
+
+# Environment Variables
+
+Use Vercel environment variables.
+
+Required variables:
+
+DATABASE_URL
+
+Do not hardcode secrets.
+
+---
+
+# Update package.json
+
+Ensure scripts include:
+
+dev
+build
+
+Example:
+
+npm run dev
+npm run build
+
+Remove Express server scripts.
+
+---
+
+# Ensure Vercel Compatibility
+
+The project must deploy correctly on Vercel with:
+
+Frontend build from Vite
+API routes from `/api`
+
+Add `vercel.json` if needed.
+
+Example:
+
+```json
+{
+  "framework": "vite"
+}
+```
+
+---
+
+# Final Deliverables
+
+Provide:
+
+1. Updated folder structure
+2. Prisma schema
+3. Prisma client file
+4. Example API endpoints
+5. Updated frontend API calls
+6. Updated package.json
+7. Environment variable setup
+8. Deployment steps for Vercel
+
+---
+
+# Important Requirements
+
+The final project must:
+
+* deploy successfully on Vercel
+* use Neon PostgreSQL
+* use Prisma ORM
+* remove Express server
+* move backend logic to Vercel serverless functions
+* keep the React + Vite frontend
