@@ -40,12 +40,12 @@ export function SharePage() {
     <MobileLayout>
       {/* Decorative Header Background */}
       <div className="absolute top-0 left-0 w-full h-64 bg-primary rounded-b-[40px] -z-10" />
-      
+
       <div className="px-6 pt-16 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
+
         {/* Welcome Text */}
-        <div className="text-white">
-          <p className="text-primary-foreground/80 font-medium uppercase tracking-widest text-sm mb-2">
+        <div className="text-black">
+          <p className="text-black/70 font-medium uppercase tracking-widest text-sm mb-2">
             Loyalty Pass
           </p>
           <h1 className="text-4xl font-display font-bold leading-tight">
@@ -63,18 +63,18 @@ export function SharePage() {
           {/* Subtle decoration */}
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
-          
+
           <h3 className="font-display font-bold text-xl text-foreground mb-6">Your Pass</h3>
-          
+
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
-            <QRCode 
-              value={customer.id} 
+            <QRCode
+              value={customer.id}
               size={200}
               fgColor="hsl(220 20% 15%)"
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
             />
           </div>
-          
+
           <div className="w-full border-t border-dashed border-border/60 pt-6 text-center">
             <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
             <p className="font-mono font-bold text-lg tracking-wide text-foreground mt-1">

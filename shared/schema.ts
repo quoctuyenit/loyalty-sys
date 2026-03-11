@@ -1,11 +1,11 @@
-import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const customers = pgTable("customers", {
-  id: text("id").primaryKey(),
-  phone: text("phone").notNull().unique(),
-  name: text("name").notNull(),
+  id: varchar("id", { length: 10 }).primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 50 }).notNull(),
   points: integer("points").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });

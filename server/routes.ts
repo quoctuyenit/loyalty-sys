@@ -1,23 +1,30 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import { type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
+import { makeId } from "./utils";
 import { z } from "zod";
-import { generateId } from "./utils"; // we'll use a simple ID generator
-
-function makeId() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 10; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // Auth endpoint
+  app.post("/api/auth/login", (req, res) => {
+    const { secretKey } = req.body;
+    const adminKey = process.env.ADMIN_SECRET_KEY;
+
+    if (!adminKey) {
+      return res.status(500).json({ success: false, message: "Server not configured. Set ADMIN_SECRET_KEY." });
+    }
+
+    if (secretKey === adminKey) {
+      return res.json({ success: true });
+    }
+
+    return res.status(401).json({ success: false, message: "Invalid secret key." });
+  });
 
   app.get(api.customers.list.path, async (req, res) => {
     const search = req.query.search as string | undefined;
@@ -44,9 +51,15 @@ export async function registerRoutes(
   app.post(api.customers.create.path, async (req, res) => {
     try {
       const input = api.customers.create.input.parse(req.body);
+      
+      let newId = makeId();
+      while (await storage.getCustomer(newId)) {
+        newId = makeId();
+      }
+
       const newCustomer = {
         ...input,
-        id: makeId() // Generate a random 10-char ID if not provided
+        id: newId,
       };
       const customer = await storage.createCustomer(newCustomer);
       res.status(201).json(customer);

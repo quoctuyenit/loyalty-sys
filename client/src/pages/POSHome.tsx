@@ -1,19 +1,25 @@
 import { useState } from "react";
-import { Link } from "wouter";
-import { Search, UserPlus, ChevronRight, User } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Search, UserPlus, ChevronRight, User, LogOut, ScanLine } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCustomers } from "@/hooks/use-customers";
 import { CreateCustomerDialog } from "@/components/CreateCustomerDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logout } from "@/lib/auth";
 
 export function POSHome() {
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
-  // Debounce search slightly for better UX, but simple pass-through here
   const { data: customers, isLoading } = useCustomers(search);
+
+  const handleLogout = () => {
+    logout();
+    setLocation("/login");
+  };
 
   return (
     <MobileLayout>
@@ -21,19 +27,37 @@ export function POSHome() {
       <div className="bg-primary px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-display font-bold">Loyalty POS</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="rounded-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-primary/60" />
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-primary/60" />
+            </div>
+            <Input
+              type="text"
+              placeholder="Search phone or name..."
+              className="h-14 w-full pl-12 pr-4 rounded-2xl bg-white text-foreground text-lg placeholder:text-muted-foreground shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-white/50"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          <Input
-            type="tel"
-            placeholder="Search phone or name..."
-            className="h-14 w-full pl-12 pr-4 rounded-2xl bg-white text-foreground text-lg placeholder:text-muted-foreground shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-white/50"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <button
+            onClick={() => setLocation("/pos/scan")}
+            className="h-14 px-4 rounded-2xl bg-white/20 hover:bg-white/30 active:bg-white/40 border border-white/30 flex items-center gap-2 text-primary-foreground font-semibold transition-colors flex-shrink-0"
+          >
+            <ScanLine className="w-5 h-5" />
+            <span className="text-sm font-bold">Scan</span>
+          </button>
         </div>
       </div>
 
@@ -41,8 +65,8 @@ export function POSHome() {
       <div className="flex-1 px-4 py-6 space-y-6 overflow-y-auto no-scrollbar">
         <div className="flex justify-between items-center px-2">
           <h2 className="font-bold text-lg text-foreground">Recent Customers</h2>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="text-primary font-semibold hover:bg-primary/10 rounded-xl"
             onClick={() => setIsCreateOpen(true)}
           >
@@ -69,7 +93,7 @@ export function POSHome() {
               </div>
               <h3 className="text-lg font-bold text-foreground mb-1">No customers found</h3>
               <p className="text-muted-foreground mb-6">Could not find anyone matching "{search}"</p>
-              <Button 
+              <Button
                 onClick={() => setIsCreateOpen(true)}
                 className="h-12 rounded-xl px-6 bg-primary text-white shadow-lg shadow-primary/20"
               >
@@ -78,8 +102,8 @@ export function POSHome() {
             </div>
           ) : (
             customers?.map((customer) => (
-              <Link 
-                key={customer.id} 
+              <Link
+                key={customer.id}
                 href={`/pos/customer/${customer.id}`}
                 className="block tap-highlight-transparent"
               >
@@ -105,8 +129,8 @@ export function POSHome() {
         </div>
       </div>
 
-      <CreateCustomerDialog 
-        open={isCreateOpen} 
+      <CreateCustomerDialog
+        open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         initialPhone={search}
         onSuccess={(id) => setLocation(`/pos/customer/${id}`)}

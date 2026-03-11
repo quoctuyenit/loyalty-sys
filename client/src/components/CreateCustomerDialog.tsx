@@ -17,7 +17,7 @@ interface Props {
 export function CreateCustomerDialog({ open, onOpenChange, initialPhone = "", onSuccess }: Props) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState(initialPhone);
-  
+
   const createMutation = useCreateCustomer();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,11 +28,11 @@ export function CreateCustomerDialog({ open, onOpenChange, initialPhone = "", on
     createMutation.mutate(
       { id: newId, name, phone, points: 0 },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           onOpenChange(false);
           setName("");
           setPhone("");
-          onSuccess?.(newId);
+          onSuccess?.(data.id);
         }
       }
     );
@@ -51,22 +51,20 @@ export function CreateCustomerDialog({ open, onOpenChange, initialPhone = "", on
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-muted-foreground">Phone Number</Label>
-            <Input 
-              id="phone" 
-              type="tel" 
-              placeholder="(555) 123-4567" 
+            <Input
+              id="phone"
+              type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="h-14 rounded-xl text-lg px-4 bg-secondary/50 border-transparent focus:border-primary focus:bg-background transition-colors"
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="name" className="text-muted-foreground">Full Name</Label>
-            <Input 
-              id="name" 
-              placeholder="Alex Johnson" 
+            <Input
+              id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="h-14 rounded-xl text-lg px-4 bg-secondary/50 border-transparent focus:border-primary focus:bg-background transition-colors"
@@ -74,12 +72,12 @@ export function CreateCustomerDialog({ open, onOpenChange, initialPhone = "", on
             />
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all"
             disabled={createMutation.isPending || !name || !phone}
           >
-            {createMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Create Account"}
+            {createMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Submit"}
           </Button>
         </form>
       </DialogContent>

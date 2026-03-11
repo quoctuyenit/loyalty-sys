@@ -10,29 +10,30 @@
     --font-display: 'Outfit', sans-serif;
 
     /* Base Colors */
-    --background: 0 0% 98%; /* #fafafa */
+    --background: 0 0% 98%;
+    /* #fafafa */
     --foreground: 220 20% 15%;
-    
+
     /* Primary: Blue #2563eb */
     --primary: 217 91% 55%;
     --primary-foreground: 0 0% 100%;
-    
+
     /* Reward/Accent: #ff9800 */
     --accent: 36 100% 50%;
     --accent-foreground: 0 0% 100%;
-    
+
     --card: 0 0% 100%;
     --card-foreground: 220 20% 15%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 15%;
-    
+
     --secondary: 217 91% 90%;
     --secondary-foreground: 217 91% 55%;
-    
+
     --muted: 220 15% 94%;
     --muted-foreground: 220 10% 50%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
@@ -54,7 +55,12 @@
     overscroll-behavior-y: none;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     @apply tracking-tight;
   }
@@ -68,6 +74,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -79,10 +86,31 @@
 }
 
 @keyframes shake-gift {
-  0%, 20% { transform: rotate(0deg) scale(1); }
-  2%, 6%, 10%, 14%, 18% { transform: rotate(15deg) scale(1.1); }
-  4%, 8%, 12%, 16% { transform: rotate(-15deg) scale(1.1); }
-  21%, 100% { transform: rotate(0deg) scale(1); }
+
+  0%,
+  20% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  2%,
+  6%,
+  10%,
+  14%,
+  18% {
+    transform: rotate(15deg) scale(1.1);
+  }
+
+  4%,
+  8%,
+  12%,
+  16% {
+    transform: rotate(-15deg) scale(1.1);
+  }
+
+  21%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 .animate-shake-gift {
@@ -91,9 +119,30 @@
 }
 
 @keyframes progress-fill {
-  from { width: 0%; }
+  from {
+    width: 0%;
+  }
 }
 
 .animate-progress {
   animation: progress-fill 1s ease-out forwards;
+}
+
+@keyframes scan-line {
+  0% {
+    top: 12%;
+  }
+
+  50% {
+    top: 82%;
+  }
+
+  100% {
+    top: 12%;
+  }
+}
+
+.animate-scan-line {
+  position: absolute;
+  animation: scan-line 2s ease-in-out infinite;
 }
