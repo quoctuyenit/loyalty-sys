@@ -1,10 +1,15 @@
 {
   "buildCommand": "npm install dotenv && npm run build",
   "outputDirectory": "dist/public",
+  "functions": {
+    "dist/api/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "/dist/api/index.js"
     },
     {
       "source": "/(.*)",
