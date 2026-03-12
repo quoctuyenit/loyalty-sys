@@ -6,6 +6,7 @@ dist/
 dist-ssr/
 build/
 server/public/
+api/index.js
 
 # Logs
 logs

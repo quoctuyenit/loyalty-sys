@@ -71,8 +71,8 @@ async function buildAll() {
 
   console.log("building api serverless function...");
   await esbuild({
-    entryPoints: ["api/index.ts"],
-    outfile: "dist/api/index.js",
+    entryPoints: ["server/vercel-handler.ts"],
+    outfile: "api/index.js",
     ...sharedOptions,
   });
 }

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express, { type Request, type Response, type NextFunction } from "express";
-import { registerRoutes } from "../server/routes";
+import { registerRoutes } from "./routes";
 import { createServer } from "http";
 
 const app = express();
@@ -16,7 +16,6 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-// Register routes (async, but top-level await in CJS via IIFE)
 (async () => {
   await registerRoutes(httpServer, app);
 
@@ -29,5 +28,4 @@ app.use(express.urlencoded({ extended: false }));
   });
 })();
 
-// Vercel serverless functions require the express app to be exported
 export default app;
