@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { type Server } from "http";
-import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { makeId } from "./utils";
 import { z } from "zod";
+import * as CustomerService from "./services/customers";
+import * as AuthService from "./services/auth";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -11,88 +11,74 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   app.get(api.customers.list.path, async (req, res) => {
-    const search = req.query.search as string | undefined;
-    const allCustomers = await storage.getCustomers(search);
-    res.json(allCustomers);
+    try {
+      const search = req.query.search as string | undefined;
+      const allCustomers = await CustomerService.listCustomers(search);
+      res.json(allCustomers);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
   });
 
   app.get(api.customers.get.path, async (req, res) => {
-    const customer = await storage.getCustomer(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+    try {
+      const customer = await CustomerService.getCustomer(req.params.id);
+      res.json(customer);
+    } catch (err: any) {
+      res.status(404).json({ message: err.message });
     }
-    res.json(customer);
   });
 
   app.get(api.customers.getByPhone.path, async (req, res) => {
-    const customer = await storage.getCustomerByPhone(req.params.phone);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+    try {
+      const customer = await CustomerService.getCustomerByPhone(req.params.phone);
+      res.json(customer);
+    } catch (err: any) {
+      res.status(404).json({ message: err.message });
     }
-    res.json(customer);
   });
 
   app.post(api.customers.create.path, async (req, res) => {
     try {
-      const input = api.customers.create.input.parse(req.body);
-      
-      let newId = makeId();
-      while (await storage.getCustomer(newId)) {
-        newId = makeId();
-      }
-
-      const newCustomer = {
-        ...input,
-        id: newId,
-      };
-      const customer = await storage.createCustomer(newCustomer);
+      const customer = await CustomerService.createCustomer(req.body);
       res.status(201).json(customer);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
           field: err.errors[0].path.join('.'),
         });
       }
-      throw err;
+      res.status(500).json({ message: err.message });
     }
   });
 
   app.put(api.customers.update.path, async (req, res) => {
     try {
-      const input = api.customers.update.input.parse(req.body);
-      const customer = await storage.updateCustomer(req.params.id, input);
+      const customer = await CustomerService.updateCustomer(req.params.id, req.body);
       res.status(200).json(customer);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
           field: err.errors[0].path.join('.'),
         });
       }
-      throw err;
+      res.status(500).json({ message: err.message });
     }
   });
 
-  app.post("/api/auth/login", (req, res) => {
-    const { secretKey } = req.body;
-    const adminKey = process.env.ADMIN_SECRET_KEY;
-
-    if (!adminKey) {
-      return res.status(500).json({
-        success: false,
-        message: "Server not configured",
-      });
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { secretKey } = req.body;
+      const result = await AuthService.login(secretKey);
+      res.json(result);
+    } catch (err: any) {
+      if (err.message === "Server not configured") {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+      return res.status(401).json({ success: false, message: "Invalid secret key" });
     }
-
-    if (secretKey === adminKey) {
-      return res.json({ success: true });
-    }
-
-    return res.status(401).json({
-      success: false,
-      message: "Invalid secret key",
-    });
   });
 
   return httpServer;
