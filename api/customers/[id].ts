@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { storage } from "../../server/storage.js";
 import { getCustomerHandler, updateCustomerHandler } from "../../server/handlers/customers.js";
 
 export default async function handler(req: any, res: any) {
@@ -6,7 +7,7 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === "GET") {
     try {
-      const customer = await getCustomerHandler(id as string);
+      const customer = await getCustomerHandler(storage, id as string);
       return res.json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
@@ -18,7 +19,7 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === "PUT") {
     try {
-      const customer = await updateCustomerHandler(id as string, req.body);
+      const customer = await updateCustomerHandler(storage, id as string, req.body);
       return res.status(200).json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {

@@ -1,13 +1,13 @@
-import { storage } from "../storage.js";
 import { api } from "@shared/routes.js";
 import { makeId } from "../utils.js";
+import type { IStorage } from "../storage.js";
 
-export async function listCustomersHandler(query: any) {
+export async function listCustomersHandler(storage: IStorage, query: any) {
   const search = query.search as string | undefined;
   return await storage.getCustomers(search);
 }
 
-export async function getCustomerHandler(id: string) {
+export async function getCustomerHandler(storage: IStorage, id: string) {
   if (!id || typeof id !== "string") {
     throw new Error("Invalid ID parameter");
   }
@@ -18,7 +18,7 @@ export async function getCustomerHandler(id: string) {
   return customer;
 }
 
-export async function getCustomerByPhoneHandler(phone: string) {
+export async function getCustomerByPhoneHandler(storage: IStorage, phone: string) {
   if (!phone || typeof phone !== "string") {
     throw new Error("Invalid phone parameter");
   }
@@ -29,8 +29,7 @@ export async function getCustomerByPhoneHandler(phone: string) {
   return customer;
 }
 
-export async function createCustomerHandler(body: any) {
-  // Pass zod validation logic to handlers instead of throwing in Express
+export async function createCustomerHandler(storage: IStorage, body: any) {
   const input = api.customers.create.input.parse(body);
 
   let newId = makeId();
@@ -45,7 +44,7 @@ export async function createCustomerHandler(body: any) {
   return await storage.createCustomer(newCustomer);
 }
 
-export async function updateCustomerHandler(id: string, body: any) {
+export async function updateCustomerHandler(storage: IStorage, id: string, body: any) {
   if (!id || typeof id !== "string") {
     throw new Error("Invalid ID parameter");
   }

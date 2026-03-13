@@ -1,20 +1,20 @@
-import * as CustomerService from "../../../server/services/customers";
+import { getCustomerByPhoneHandler } from "../../../server/handlers/customers.js";
+import { storage } from "../../../server/storage.js";
 
 export default async function handler(req: any, res: any) {
   const { phone } = req.query;
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
+  if (req.method === "GET") {
+    try {
+      const customer = await getCustomerByPhoneHandler(storage, phone as string);
+      return res.json(customer);
+    } catch (err: any) {
+      if (err.message === "Invalid phone parameter") {
+        return res.status(400).json({ message: err.message });
+      }
+      return res.status(404).json({ message: err.message });
+    }
   }
 
-  if (!phone || typeof phone !== "string") {
-    return res.status(400).json({ message: "Invalid phone parameter" });
-  }
-
-  try {
-    const customer = await CustomerService.getCustomerByPhone(phone);
-    return res.json(customer);
-  } catch (err: any) {
-    return res.status(404).json({ message: err.message });
-  }
+  return res.status(405).json({ message: "Method not allowed" });
 }

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { type Server } from "http";
 import { api } from "@shared/routes.js";
 import { z } from "zod";
+import { storage } from "./storage.js";
 import { 
   listCustomersHandler, 
   getCustomerHandler, 
@@ -18,7 +19,7 @@ export async function registerRoutes(
 
   app.get(api.customers.list.path, async (req, res) => {
     try {
-      const allCustomers = await listCustomersHandler(req.query);
+      const allCustomers = await listCustomersHandler(storage, req.query);
       res.json(allCustomers);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -27,7 +28,7 @@ export async function registerRoutes(
 
   app.get(api.customers.get.path, async (req, res) => {
     try {
-      const customer = await getCustomerHandler(req.params.id);
+      const customer = await getCustomerHandler(storage, req.params.id);
       res.json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
@@ -39,7 +40,7 @@ export async function registerRoutes(
 
   app.get(api.customers.getByPhone.path, async (req, res) => {
     try {
-      const customer = await getCustomerByPhoneHandler(req.params.phone);
+      const customer = await getCustomerByPhoneHandler(storage, req.params.phone);
       res.json(customer);
     } catch (err: any) {
       if (err.message === "Invalid phone parameter") {
@@ -51,7 +52,7 @@ export async function registerRoutes(
 
   app.post(api.customers.create.path, async (req, res) => {
     try {
-      const customer = await createCustomerHandler(req.body);
+      const customer = await createCustomerHandler(storage, req.body);
       res.status(201).json(customer);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -66,7 +67,7 @@ export async function registerRoutes(
 
   app.put(api.customers.update.path, async (req, res) => {
     try {
-      const customer = await updateCustomerHandler(req.params.id, req.body);
+      const customer = await updateCustomerHandler(storage, req.params.id, req.body);
       res.status(200).json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
