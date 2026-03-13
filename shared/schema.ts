@@ -10,10 +10,14 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertCustomerSchema = createInsertSchema(customers).omit({ createdAt: true });
-
 export type Customer = typeof customers.$inferSelect;
+export type NewCustomer = typeof customers.$inferInsert;
+
+export const insertCustomerSchema = createInsertSchema(customers).extend({
+  id: z.string().optional(),
+}).omit({ createdAt: true });
+
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 
-export type CreateCustomerRequest = InsertCustomer;
+export type CreateCustomerRequest = NewCustomer;
 export type UpdateCustomerRequest = Partial<InsertCustomer>;

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateCustomer } from "@/hooks/use-customers";
-import { v4 as uuidv4 } from "uuid";
 import { Loader2 } from "lucide-react";
 
 interface Props {
@@ -24,9 +23,8 @@ export function CreateCustomerDialog({ open, onOpenChange, initialPhone = "", on
     e.preventDefault();
     if (!name || !phone) return;
 
-    const newId = uuidv4();
     createMutation.mutate(
-      { id: newId, name, phone, points: 0 },
+      { name, phone, points: 0 },
       {
         onSuccess: (data) => {
           onOpenChange(false);
