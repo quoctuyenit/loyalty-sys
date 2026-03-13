@@ -1,11 +1,10 @@
 import { z } from "zod";
-import * as CustomerService from "../../server/services/customers";
+import { listCustomersHandler, createCustomerHandler } from "../../server/handlers/customers.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method === "GET") {
     try {
-      const search = req.query.search as string | undefined;
-      const allCustomers = await CustomerService.listCustomers(search);
+      const allCustomers = await listCustomersHandler(req.query);
       return res.json(allCustomers);
     } catch (err: any) {
       return res.status(500).json({ message: err.message });
@@ -14,7 +13,7 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === "POST") {
     try {
-      const customer = await CustomerService.createCustomer(req.body);
+      const customer = await createCustomerHandler(req.body);
       return res.status(201).json(customer);
     } catch (err: any) {
       if (err instanceof z.ZodError) {

@@ -1,4 +1,5 @@
-export async function login(secretKey: string) {
+export async function loginHandler(body: any) {
+  const { secretKey } = body;
   const adminKey = process.env.ADMIN_SECRET_KEY;
 
   if (!adminKey) {

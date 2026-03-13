@@ -1,4 +1,4 @@
-import * as AuthService from "../../server/services/auth";
+import { loginHandler } from "../../server/handlers/auth.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
@@ -6,13 +6,12 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { secretKey } = req.body;
-    const result = await AuthService.login(secretKey);
+    const result = await loginHandler(req.body);
     return res.json(result);
   } catch (err: any) {
     if (err.message === "Server not configured") {
       return res.status(500).json({ success: false, message: err.message });
     }
-    return res.status(401).json({ success: false, message: "Invalid secret key" });
+    return res.status(401).json({ success: false, message: err.message });
   }
 }

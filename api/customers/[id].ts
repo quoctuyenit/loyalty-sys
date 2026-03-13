@@ -1,27 +1,29 @@
 import { z } from "zod";
-import * as CustomerService from "../../server/services/customers";
+import { getCustomerHandler, updateCustomerHandler } from "../../server/handlers/customers.js";
 
 export default async function handler(req: any, res: any) {
   const { id } = req.query;
 
-  if (!id || typeof id !== "string") {
-    return res.status(400).json({ message: "Invalid ID parameter" });
-  }
-
   if (req.method === "GET") {
     try {
-      const customer = await CustomerService.getCustomer(id);
+      const customer = await getCustomerHandler(id as string);
       return res.json(customer);
     } catch (err: any) {
+      if (err.message === "Invalid ID parameter") {
+        return res.status(400).json({ message: err.message });
+      }
       return res.status(404).json({ message: err.message });
     }
   }
 
   if (req.method === "PUT") {
     try {
-      const customer = await CustomerService.updateCustomer(id, req.body);
+      const customer = await updateCustomerHandler(id as string, req.body);
       return res.status(200).json(customer);
     } catch (err: any) {
+      if (err.message === "Invalid ID parameter") {
+        return res.status(400).json({ message: err.message });
+      }
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
