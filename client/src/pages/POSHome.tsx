@@ -26,7 +26,7 @@ export function POSHome() {
       {/* Header */}
       <div className="bg-primary px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-display font-bold">Loyalty POS</h1>
+          <h1 className="text-3xl font-display font-bold">Loyalty SYS</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -45,7 +45,7 @@ export function POSHome() {
             </div>
             <Input
               type="text"
-              placeholder="Search phone or name..."
+              placeholder="Search phone ..."
               className="h-14 w-full pl-12 pr-4 rounded-2xl bg-white text-foreground text-lg placeholder:text-muted-foreground shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-white/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -64,7 +64,7 @@ export function POSHome() {
       {/* Main Content */}
       <div className="flex-1 px-4 py-6 space-y-6 overflow-y-auto no-scrollbar">
         <div className="flex justify-between items-center px-2">
-          <h2 className="font-bold text-lg text-foreground">Recent Customers</h2>
+          <h2 className="font-bold text-lg text-foreground">List customers</h2>
           <Button
             variant="ghost"
             className="text-primary font-semibold hover:bg-primary/10 rounded-xl"

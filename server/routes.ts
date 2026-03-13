@@ -10,22 +10,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  // Auth endpoint
-  app.post("/api/auth/login", (req, res) => {
-    const { secretKey } = req.body;
-    const adminKey = process.env.ADMIN_SECRET_KEY;
-
-    if (!adminKey) {
-      return res.status(500).json({ success: false, message: "Server not configured. Set ADMIN_SECRET_KEY." });
-    }
-
-    if (secretKey === adminKey) {
-      return res.json({ success: true });
-    }
-
-    return res.status(401).json({ success: false, message: "Invalid secret key." });
-  });
-
   app.get(api.customers.list.path, async (req, res) => {
     const search = req.query.search as string | undefined;
     const allCustomers = await storage.getCustomers(search);

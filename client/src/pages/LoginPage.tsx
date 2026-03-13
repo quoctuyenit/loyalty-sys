@@ -55,7 +55,7 @@ export function LoginPage() {
                     </div>
                     <div>
                         <h1 className="text-3xl font-display font-bold">Admin Login</h1>
-                        <p className="text-primary-foreground/70 text-sm mt-0.5">Loyalty POS System</p>
+                        <p className="text-primary-foreground/70 text-sm mt-0.5">Loyalty System</p>
                     </div>
                 </div>
             </div>

@@ -222,8 +222,8 @@ export function POSCustomerDetail() {
             onClick={handleRedeem}
             disabled={customer.points < 100 || updateMutation.isPending}
             className={`w-full h-16 rounded-2xl text-xl font-bold font-display shadow-xl transition-all duration-300 ${customer.points >= 100
-                ? "bg-gradient-to-r from-accent to-orange-400 text-white hover:scale-[1.02] shadow-accent/30"
-                : "bg-secondary text-muted-foreground shadow-none"
+              ? "bg-gradient-to-r from-accent to-orange-400 text-white hover:scale-[1.02] shadow-accent/30"
+              : "bg-secondary text-muted-foreground shadow-none"
               }`}
           >
             {customer.points >= 100 ? (
@@ -294,7 +294,7 @@ export function POSCustomerDetail() {
             />
           </div>
           <p className="mt-6 text-center text-muted-foreground font-medium">
-            Scan this code at the POS to pull up {customer.name.split(' ')[0]}'s account.
+            Scan this code to pull up {customer.name.split(' ')[0]}'s account.
           </p>
         </DialogContent>
       </Dialog>

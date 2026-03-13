@@ -149,7 +149,7 @@ export function POSScanPage() {
                             </p>
                         </div>
                         <Button onClick={() => setLocation("/pos")} className="w-full h-14 rounded-2xl bg-primary text-white font-bold">
-                            Back to POS
+                            Back to Listing
                         </Button>
                     </div>
                 )}
@@ -170,7 +170,7 @@ export function POSScanPage() {
                                 Try Again
                             </Button>
                             <Button variant="outline" onClick={() => setLocation("/pos")} className="w-full h-14 rounded-2xl font-bold">
-                                Back to POS
+                                Back to Listing
                             </Button>
                         </div>
                     </div>
@@ -207,7 +207,7 @@ export function POSScanPage() {
                                 onClick={() => setLocation("/pos")}
                                 className="w-full h-14 rounded-2xl font-bold border-border/60"
                             >
-                                Back to POS
+                                Back to Listing
                             </Button>
                         </div>
                     </div>
