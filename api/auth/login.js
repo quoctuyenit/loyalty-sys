@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default function handler(req, res) {
     if (req.method !== "POST") {
         return res.status(405).json({ message: "Method not allowed" });
     }
@@ -21,4 +21,4 @@ module.exports = (req, res) => {
         success: false,
         message: "Invalid secret key"
     });
-};
+}
