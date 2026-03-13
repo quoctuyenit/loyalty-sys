@@ -74,5 +74,26 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/auth/login", (req, res) => {
+    const { secretKey } = req.body;
+    const adminKey = process.env.ADMIN_SECRET_KEY;
+
+    if (!adminKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Server not configured",
+      });
+    }
+
+    if (secretKey === adminKey) {
+      return res.json({ success: true });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid secret key",
+    });
+  });
+
   return httpServer;
 }

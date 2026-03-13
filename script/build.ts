@@ -50,7 +50,6 @@ async function buildAll() {
   const sharedOptions = {
     platform: "node" as const,
     bundle: true,
-    format: "cjs" as const,
     define: {
       "process.env.NODE_ENV": '"production"',
     },
@@ -66,6 +65,7 @@ async function buildAll() {
   await esbuild({
     entryPoints: ["server/index.ts"],
     outfile: "dist/index.cjs",
+    format: "cjs" as const,
     ...sharedOptions,
   });
 
@@ -73,6 +73,7 @@ async function buildAll() {
   await esbuild({
     entryPoints: ["server/vercel-handler.ts"],
     outfile: "api/index.js",
+    format: "esm" as const,
     ...sharedOptions,
   });
 }
