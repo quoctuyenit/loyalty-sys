@@ -40,3 +40,5 @@ vite.config.ts.*
 # Others
 *.tar.gz
 coverage/
+.vercel
+.env*.local
