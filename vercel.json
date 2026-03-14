@@ -1,6 +1,9 @@
 {
   "buildCommand": "npm install dotenv && npm run build",
   "outputDirectory": "dist/public",
+  "env": {
+    "NODE_OPTIONS": "--no-deprecation"
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
