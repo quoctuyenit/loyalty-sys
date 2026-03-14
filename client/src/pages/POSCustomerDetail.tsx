@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
 export function POSCustomerDetail({ id }: { id: string }) {
+  console.log("Customer id:", id);
   const { data: customer, isLoading } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
   const { toast } = useToast();
