@@ -12,12 +12,12 @@ async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
       ...options?.headers,
     },
   });
-  
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
     throw new Error(errorData?.message || `API Error: ${res.status}`);
   }
-  
+
   return res.json();
 }
 
@@ -27,7 +27,7 @@ export function useCustomers(search?: string) {
     queryFn: async () => {
       const url = new URL(api.customers.list.path, window.location.origin);
       if (search) url.searchParams.append("search", search);
-      
+
       const data = await fetchApi(url.toString());
       return api.customers.list.responses[200].parse(data);
     },
@@ -40,6 +40,7 @@ export function useCustomer(id: string) {
     queryFn: async () => {
       if (!id) return null;
       const url = buildUrl(api.customers.get.path, { id });
+      console.log("Customer url:", url);
       const data = await fetchApi(url);
       return api.customers.get.responses[200].parse(data);
     },
