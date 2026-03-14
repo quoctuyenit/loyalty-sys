@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link } from "wouter";
 import { ArrowLeft, Plus, Minus, QrCode, Share, CheckCircle2, Edit3 } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
@@ -11,8 +11,7 @@ import QRCode from "react-qr-code";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
-export function POSCustomerDetail() {
-  const { id } = useParams<{ id: string }>();
+export function POSCustomerDetail({ id }: { id: string }) {
   const { data: customer, isLoading } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
   const { toast } = useToast();

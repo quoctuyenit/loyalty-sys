@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, Redirect, Router } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,7 +13,7 @@ import { POSScanPage } from "./pages/POSScanPage";
 import { SharePage } from "./pages/SharePage";
 import { LoginPage } from "./pages/LoginPage";
 
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
       <Route path="/">
@@ -29,7 +29,7 @@ function Router() {
       </Route>
       <Route path="/pos/customer/:id">
         {(params) => (
-          <AuthGuard><POSCustomerDetail /></AuthGuard>
+          <AuthGuard><POSCustomerDetail id={params.id || ""} /></AuthGuard>
         )}
       </Route>
       <Route component={NotFound} />
@@ -42,7 +42,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <Router>
+          <AppRoutes />
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
