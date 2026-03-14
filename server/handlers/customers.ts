@@ -1,4 +1,4 @@
-import { api } from "@shared/routes.js";
+import { api } from "../../shared/routes.js";
 import { makeId } from "../utils.js";
 import type { IStorage } from "../storage.js";
 

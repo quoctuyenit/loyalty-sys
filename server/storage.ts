@@ -1,5 +1,5 @@
 import { db } from "./db.js";
-import { customers, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "@shared/schema.js";
+import { customers, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "../shared/schema.js";
 import { eq, ilike } from "drizzle-orm";
 
 export interface IStorage {

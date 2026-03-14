@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import { type InsertCustomer, type UpdateCustomerRequest, type Customer } from "@shared/schema";
+import { api, buildUrl } from "../../../shared/routes.js";
+import { type InsertCustomer, type UpdateCustomerRequest, type Customer } from "../../../shared/schema.js";
 import { useToast } from "@/hooks/use-toast";
 
 // Helper to handle API responses and validation
