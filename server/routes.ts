@@ -3,12 +3,13 @@ import { type Server } from "http";
 import { api } from "../shared/routes.js";
 import { z } from "zod";
 import { storage } from "./storage.js";
-import { 
-  listCustomersHandler, 
-  getCustomerHandler, 
-  getCustomerByPhoneHandler, 
-  createCustomerHandler, 
-  updateCustomerHandler 
+import {
+  listCustomersHandler,
+  getCustomerHandler,
+  getCustomerByPhoneHandler,
+  createCustomerHandler,
+  updateCustomerHandler,
+  getCustomerHistoryHandler,
 } from "./handlers/customers.js";
 import { loginHandler } from "./handlers/auth.js";
 
@@ -23,6 +24,18 @@ export async function registerRoutes(
       res.json(allCustomers);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get(api.customers.history.path, async (req, res) => {
+    try {
+      const history = await getCustomerHistoryHandler(storage, req.params.id, req.query);
+      res.json(history);
+    } catch (err: any) {
+      if (err.message === "Invalid ID parameter") {
+        return res.status(400).json({ message: err.message });
+      }
+      res.status(404).json({ message: err.message });
     }
   });
 

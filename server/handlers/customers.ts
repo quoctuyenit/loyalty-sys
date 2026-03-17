@@ -41,13 +41,46 @@ export async function createCustomerHandler(storage: IStorage, body: any) {
     ...input,
     id: newId,
   };
-  return await storage.createCustomer(newCustomer);
+  const created = await storage.createCustomer(newCustomer);
+
+  if (created.points && created.points !== 0) {
+    await storage.appendHistory(created.id, created.points);
+  }
+
+  return created;
 }
 
 export async function updateCustomerHandler(storage: IStorage, id: string, body: any) {
   if (!id || typeof id !== "string") {
     throw new Error("Invalid ID parameter");
   }
+  const existing = await storage.getCustomer(id);
+  if (!existing) {
+    throw new Error("Customer not found");
+  }
+
   const input = api.customers.update.input.parse(body);
-  return await storage.updateCustomer(id, input);
+  const updated = await storage.updateCustomer(id, input);
+
+  if (typeof input.points === "number") {
+    const delta = input.points - existing.points;
+    if (delta !== 0) {
+      await storage.appendHistory(id, delta);
+    }
+  }
+
+  return updated;
+}
+
+export async function getCustomerHistoryHandler(storage: IStorage, id: string, query: any) {
+  if (!id || typeof id !== "string") {
+    throw new Error("Invalid ID parameter");
+  }
+  const customer = await storage.getCustomer(id);
+  if (!customer) {
+    throw new Error("Customer not found");
+  }
+  const limitParam = parseInt(query.limit as string) || 50;
+  const limit = Math.min(Math.max(1, limitParam), 200);
+  return await storage.getCustomerHistory(id, limit);
 }

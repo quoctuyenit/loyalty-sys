@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Plus, Minus, QrCode, Share, CheckCircle2, Edit3 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { Button } from "@/components/ui/button";
-import { useCustomer, useUpdateCustomer } from "@/hooks/use-customers";
+import { useCustomer, useUpdateCustomer, useCustomerHistory } from "@/hooks/use-customers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import QRCode from "react-qr-code";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
+import { format, fromUnixTime, isToday } from "date-fns";
+
+function formatHistoryTime(t: number): { date: string; time: string } {
+  const date = fromUnixTime(t);
+  if (isToday(date)) {
+    return { date: "Today", time: format(date, "HH:mm") };
+  }
+  return { date: format(date, "dd/MM/yyyy"), time: format(date, "HH:mm") };
+}
 
 export function POSCustomerDetail({ id }: { id: string }) {
-  console.log("Customer id:", id);
   const { data: customer, isLoading } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
   const { toast } = useToast();
@@ -26,6 +35,10 @@ export function POSCustomerDetail({ id }: { id: string }) {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
   const [editPoints, setEditPoints] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(50);
+
+  const { data: history, isLoading: historyLoading } = useCustomerHistory(id, showHistory);
 
   if (isLoading || !customer) {
     return (
@@ -137,6 +150,9 @@ export function POSCustomerDetail({ id }: { id: string }) {
     );
   };
 
+  const visibleHistory = history?.slice(0, historyLimit) ?? [];
+  const hasMore = (history?.length ?? 0) > historyLimit;
+
   return (
     <MobileLayout>
       {/* Top Nav */}
@@ -216,7 +232,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* Redeem Button (Sticky at bottom typically, but inline here for flow) */}
+        {/* Redeem Button */}
         <div className="pt-6">
           <Button
             onClick={handleRedeem}
@@ -236,7 +252,94 @@ export function POSCustomerDetail({ id }: { id: string }) {
             )}
           </Button>
         </div>
+
+        {/* View History Button */}
+        <div>
+          <Button
+            variant="outline"
+            onClick={() => setShowHistory(true)}
+            className="w-full h-14 rounded-2xl border-border/50 text-muted-foreground font-semibold flex items-center gap-2"
+          >
+            <History className="w-5 h-5" />
+            View History
+          </Button>
+        </div>
       </div>
+
+      {/* History Sheet */}
+      <Sheet open={showHistory} onOpenChange={setShowHistory}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl px-0 pt-0 flex flex-col"
+          style={{ maxHeight: "78dvh", paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        >
+          {/* Handle bar */}
+          <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+
+          <SheetHeader className="px-6 pt-3 pb-4 border-b border-border/50 flex-shrink-0">
+            <SheetTitle className="font-display text-xl text-left text-foreground">
+              {customer.name.split(' ')[0]}'s History
+            </SheetTitle>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {history ? `${history.length} record${history.length !== 1 ? "s" : ""}` : "Loading..."}
+            </p>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+            {historyLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : !history || history.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground">
+                <History className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">No history yet</p>
+                <p className="text-xs mt-1 opacity-60">Point changes will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-2 pb-4">
+                {visibleHistory.map((record, i) => {
+                  const { date, time } = formatHistoryTime(record.t);
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border/40 active:scale-[0.98] transition-transform"
+                    >
+                      <div>
+                        <p
+                          className={`text-lg font-display font-bold leading-tight ${record.d > 0 ? "text-green-500" : "text-red-500"
+                            }`}
+                        >
+                          {record.d > 0 ? `+${record.d}` : record.d} pts
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{time}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{date}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {hasMore && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setHistoryLimit((l) => l + 50)}
+                    className="w-full h-12 rounded-2xl text-muted-foreground mt-1 flex items-center gap-2 border border-border/40"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Load more
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Add Points Confirm Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -398,6 +501,6 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </div>
         </DialogContent>
       </Dialog>
-    </MobileLayout>
+    </MobileLayout >
   );
 }

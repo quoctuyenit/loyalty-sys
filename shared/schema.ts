@@ -21,3 +21,17 @@ export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 
 export type CreateCustomerRequest = NewCustomer;
 export type UpdateCustomerRequest = Partial<InsertCustomer>;
+
+export const pointHistory = pgTable("point_history", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  t: integer("t").notNull(),
+  cid: varchar("cid", { length: 10 }).notNull().references(() => customers.id),
+  d: integer("d").notNull(),
+});
+
+export type PointHistoryRecord = typeof pointHistory.$inferSelect;
+
+export const historyResponseSchema = z.object({
+  t: z.number(),
+  d: z.number(),
+});

@@ -3,6 +3,8 @@ import { api, buildUrl } from "../../../shared/routes.js";
 import { type InsertCustomer, type UpdateCustomerRequest, type Customer } from "../../../shared/schema.js";
 import { useToast } from "@/hooks/use-toast";
 
+export type HistoryRecord = { t: number; d: number };
+
 // Helper to handle API responses and validation
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -40,7 +42,6 @@ export function useCustomer(id: string) {
     queryFn: async () => {
       if (!id) return null;
       const url = buildUrl(api.customers.get.path, { id });
-      console.log("Customer url:", url);
       const data = await fetchApi(url);
       return api.customers.get.responses[200].parse(data);
     },
@@ -115,6 +116,7 @@ export function useUpdateCustomer() {
       queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
       queryClient.invalidateQueries({ queryKey: [api.customers.getByPhone.path] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
     },
     onError: (err: Error) => {
       toast({
@@ -123,5 +125,17 @@ export function useUpdateCustomer() {
         variant: "destructive",
       });
     },
+  });
+}
+
+export function useCustomerHistory(id: string, enabled: boolean) {
+  return useQuery<HistoryRecord[]>({
+    queryKey: ["history", id],
+    queryFn: async () => {
+      const url = buildUrl(api.customers.history.path, { id });
+      return await fetchApi<HistoryRecord[]>(url);
+    },
+    enabled: !!id && enabled,
+    staleTime: 0,
   });
 }

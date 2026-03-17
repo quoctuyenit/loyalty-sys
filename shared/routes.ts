@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertCustomerSchema, customers } from './schema.js';
+import { insertCustomerSchema, customers, historyResponseSchema } from './schema.js';
 
 export const errorSchemas = {
   validation: z.object({
@@ -58,6 +58,14 @@ export const api = {
       responses: {
         200: z.custom<typeof customers.$inferSelect>(),
         400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    history: {
+      method: 'GET' as const,
+      path: '/api/customers/:id/history' as const,
+      responses: {
+        200: z.array(historyResponseSchema),
         404: errorSchemas.notFound,
       },
     },
