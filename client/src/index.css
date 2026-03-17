@@ -48,11 +48,15 @@
     @apply border-border;
   }
 
+  html {
+    overscroll-behavior: none;
+    background-color: theme(colors.neutral.200);
+  }
+
   body {
     @apply bg-neutral-200 text-foreground antialiased;
     font-family: var(--font-sans);
-    /* Prevents pull-to-refresh on mobile browsers for a more native feel */
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
   }
 
   h1,
@@ -68,7 +72,7 @@
 
 @layer utilities {
   .mobile-container {
-    @apply w-full max-w-[420px] mx-auto min-h-[100dvh] bg-background shadow-2xl relative overflow-x-hidden flex flex-col;
+    @apply w-full max-w-[420px] mx-auto min-h-[100dvh] bg-background shadow-2xl relative overflow-hidden flex flex-col;
   }
 
   .no-scrollbar::-webkit-scrollbar {

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "../../../shared/routes.js";
 import { type InsertCustomer, type UpdateCustomerRequest, type Customer } from "../../../shared/schema.js";
 import { useToast } from "@/hooks/use-toast";
@@ -95,6 +95,24 @@ export function useCreateCustomer() {
         variant: "destructive",
       });
     },
+  });
+}
+
+const PAGE_LIMIT = 20;
+
+export function useInfiniteCustomers(search: string) {
+  return useInfiniteQuery<Customer[]>({
+    queryKey: ["customers-infinite", search],
+    queryFn: async ({ pageParam }) => {
+      const url = new URL(api.customers.list.path, window.location.origin);
+      if (search) url.searchParams.set("search", search);
+      url.searchParams.set("limit", String(PAGE_LIMIT));
+      url.searchParams.set("page", String(pageParam));
+      return await fetchApi<Customer[]>(url.toString());
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_LIMIT ? allPages.length + 1 : undefined,
   });
 }
 

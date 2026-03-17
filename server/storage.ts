@@ -3,7 +3,7 @@ import { customers, pointHistory, type CreateCustomerRequest, type UpdateCustome
 import { eq, ilike, desc } from "drizzle-orm";
 
 export interface IStorage {
-  getCustomers(search?: string): Promise<Customer[]>;
+  getCustomers(search?: string, limit?: number, offset?: number): Promise<Customer[]>;
   getCustomer(id: string): Promise<Customer | undefined>;
   getCustomerByPhone(phone: string): Promise<Customer | undefined>;
   createCustomer(customer: CreateCustomerRequest): Promise<Customer>;
@@ -13,11 +13,12 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getCustomers(search?: string): Promise<Customer[]> {
+  async getCustomers(search?: string, limit = 20, offset = 0): Promise<Customer[]> {
+    const query = db.select().from(customers);
     if (search) {
-      return await db.select().from(customers).where(ilike(customers.phone, `%${search}%`));
+      return await query.where(ilike(customers.phone, `%${search}%`)).limit(limit).offset(offset);
     }
-    return await db.select().from(customers);
+    return await query.limit(limit).offset(offset);
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {

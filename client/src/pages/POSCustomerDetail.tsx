@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Plus, Minus, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown } from "lucide-react";
+import { ArrowLeft, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown, RefreshCw } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ function formatHistoryTime(t: number): { date: string; time: string } {
 }
 
 export function POSCustomerDetail({ id }: { id: string }) {
-  const { data: customer, isLoading } = useCustomer(id || "");
+  const { data: customer, isLoading, isFetching, refetch } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
   const { toast } = useToast();
 
@@ -163,8 +163,15 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </Button>
         </Link>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={handleShare} className="h-12 w-12 rounded-full text-primary hover:bg-primary/10">
-            <Share className="w-5 h-5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-12 w-12 rounded-full text-primary hover:bg-primary/10"
+            title="Reload"
+          >
+            <RefreshCw className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setShowQR(true)} className="h-12 w-12 rounded-full text-primary hover:bg-primary/10">
             <QrCode className="w-5 h-5" />

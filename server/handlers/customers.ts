@@ -4,7 +4,11 @@ import type { IStorage } from "../storage.js";
 
 export async function listCustomersHandler(storage: IStorage, query: any) {
   const search = query.search as string | undefined;
-  return await storage.getCustomers(search);
+
+  const limit = Math.min(Math.max(1, parseInt(query.limit as string) || 20), 100);
+  const page = Math.max(1, parseInt(query.page as string) || 1);
+  const offset = (page - 1) * limit;
+  return await storage.getCustomers(search, limit, offset);
 }
 
 export async function getCustomerHandler(storage: IStorage, id: string) {
