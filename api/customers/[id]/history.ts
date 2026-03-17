@@ -15,10 +15,7 @@ export default async function handler(req: any, res: any) {
 
         const result = await getCustomerHistoryHandler(storage, id, req.query);
 
-        return res.status(200).json({
-            success: true,
-            data: result
-        });
+        return res.status(200).json(result);
 
     } catch (error: any) {
         console.error("History API error:", error);
