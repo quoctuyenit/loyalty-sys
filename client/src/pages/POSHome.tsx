@@ -12,6 +12,7 @@ import { logout } from "@/lib/auth";
 export function POSHome() {
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
