@@ -7,10 +7,12 @@ export type HistoryRecord = { t: number; d: number };
 
 // Helper to handle API responses and validation
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem("admin_jwt_token");
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });

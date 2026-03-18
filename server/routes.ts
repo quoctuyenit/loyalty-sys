@@ -11,14 +11,25 @@ import {
   updateCustomerHandler,
   getCustomerHistoryHandler,
 } from "./handlers/customers.js";
-import { loginHandler, logoutHandler, meHandler } from "./handlers/auth.js";
+import { loginHandler, meHandler } from "./handlers/auth.js";
 import { type Request, type Response, type NextFunction } from "express";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret-change-in-production";
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!(req.session as any)?.authenticated) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  next();
+
+  const token = authHeader.split(" ")[1];
+  try {
+    jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 }
 
 
@@ -107,7 +118,7 @@ export async function registerRoutes(
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const result = await loginHandler(req, req.body);
+      const result = await loginHandler(req.body);
       res.json(result);
     } catch (err: any) {
       if (err.message === "Server not configured") {
@@ -122,9 +133,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/auth/logout", async (req, res) => {
-    await logoutHandler(req);
     res.json({ success: true });
   });
+
 
 
   return httpServer;

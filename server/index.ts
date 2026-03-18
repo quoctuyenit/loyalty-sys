@@ -1,12 +1,9 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes.js";
 import { serveStatic } from "./static.js";
 import { createServer } from "http";
 
-const SessionStore = MemoryStore(session);
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,12 +11,6 @@ const httpServer = createServer(app);
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
-  }
-}
-
-declare module "express-session" {
-  interface SessionData {
-    authenticated: boolean;
   }
 }
 
@@ -34,20 +25,8 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "dev-secret-change-in-production",
-    resave: false,
-    saveUninitialized: false,
-    store: new SessionStore({ checkPeriod: 86_400_000 }), // prune expired entries every 24h
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
-      sameSite: "lax",
-    },
-  })
-);
+app.use(express.urlencoded({ extended: false }));
+
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
