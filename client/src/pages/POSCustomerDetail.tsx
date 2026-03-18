@@ -163,6 +163,9 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </Button>
         </Link>
         <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={handleShare} className="h-12 w-12 rounded-full text-primary hover:bg-primary/10">
+            <Share className="w-5 h-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
