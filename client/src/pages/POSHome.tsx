@@ -56,7 +56,7 @@ export function POSHome() {
   return (
     <MobileLayout>
       {/* Header */}
-      <div className="px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10" style={{ backgroundColor: "hsl(210deg 31.51% 71.37%)" }}>
+      <div className="px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10 bg-[#9fb6cd]">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold" style={{ fontFamily: "'Kavoon', cursive" }}>Herty System</h1>
           <Button
@@ -152,7 +152,7 @@ export function POSHome() {
                     </div>
                     <div className="text-right flex items-center gap-3">
                       <div className="flex flex-col items-end">
-                        <span className="font-display font-bold text-lg" style={{ color: "hsl(0deg 86.27% 72.4%)" }}>{customer.points}</span>
+                        <span className="font-display font-bold text-lg text-[#f57c7c]">{customer.points}</span>
                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">pts</span>
                       </div>
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
