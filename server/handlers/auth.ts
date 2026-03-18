@@ -19,7 +19,7 @@ export async function loginHandler(body: any) {
   return { success: true, token };
 }
 
-export function meHandler(req: Request) {
+export async function meHandler(req: Request) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return { authenticated: false };
 
