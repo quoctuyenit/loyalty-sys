@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const result = await loginHandler(req.body);
+    const result = await loginHandler(req, req.body);
     return res.json(result);
   } catch (err: any) {
     if (err.message === "Server not configured") {
