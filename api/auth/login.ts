@@ -1,6 +1,7 @@
 import { loginHandler } from "../../server/handlers/auth.js";
+import { Request, Response } from "express";
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: Request, res: Response) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
