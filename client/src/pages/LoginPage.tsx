@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { KeyRound, LogIn, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileLayout } from "@/components/MobileLayout";
-import { setAuthenticated } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export function LoginPage() {
@@ -32,7 +31,6 @@ export function LoginPage() {
             const data = await res.json();
 
             if (data.success) {
-                setAuthenticated();
                 toast({ title: "Welcome back!", description: "Logged in successfully." });
                 setLocation("/pos");
             } else {

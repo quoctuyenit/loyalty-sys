@@ -26,8 +26,8 @@ export function POSHome() {
 
   const customers = data?.pages.flat() ?? [];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setLocation("/login");
   };
 

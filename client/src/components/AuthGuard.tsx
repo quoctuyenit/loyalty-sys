@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { isAuthenticated } from "@/lib/auth";
+import { checkAuth } from "@/lib/auth";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
     const [, setLocation] = useLocation();
@@ -8,15 +8,20 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const [allowed, setAllowed] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated()) {
-            setAllowed(true);
-        } else {
-            setLocation("/login");
-        }
-        setChecked(true);
-    }, []);
+        const verify = async () => {
+            const isAuthed = await checkAuth();
+            if (isAuthed) {
+                setAllowed(true);
+            } else {
+                setLocation("/login");
+            }
+            setChecked(true);
+        };
+        verify();
+    }, [setLocation]);
 
     if (!checked) return null;
     if (!allowed) return null;
     return <>{children}</>;
 }
+

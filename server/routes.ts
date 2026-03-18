@@ -11,14 +11,23 @@ import {
   updateCustomerHandler,
   getCustomerHistoryHandler,
 } from "./handlers/customers.js";
-import { loginHandler } from "./handlers/auth.js";
+import { loginHandler, logoutHandler, meHandler } from "./handlers/auth.js";
+import { type Request, type Response, type NextFunction } from "express";
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!(req.session as any)?.authenticated) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
+
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
 
-  app.get(api.customers.list.path, async (req, res) => {
+  app.get(api.customers.list.path, requireAuth, async (req, res) => {
     try {
       const allCustomers = await listCustomersHandler(storage, req.query);
       res.json(allCustomers);
@@ -27,9 +36,9 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.customers.history.path, async (req, res) => {
+  app.get(api.customers.history.path, requireAuth, async (req, res) => {
     try {
-      const history = await getCustomerHistoryHandler(storage, req.params.id, req.query);
+      const history = await getCustomerHistoryHandler(storage, req.params.id as string, req.query);
       res.json(history);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
@@ -41,7 +50,7 @@ export async function registerRoutes(
 
   app.get(api.customers.get.path, async (req, res) => {
     try {
-      const customer = await getCustomerHandler(storage, req.params.id);
+      const customer = await getCustomerHandler(storage, req.params.id as string);
       res.json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
@@ -51,9 +60,9 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.customers.getByPhone.path, async (req, res) => {
+  app.get(api.customers.getByPhone.path, requireAuth, async (req, res) => {
     try {
-      const customer = await getCustomerByPhoneHandler(storage, req.params.phone);
+      const customer = await getCustomerByPhoneHandler(storage, req.params.phone as string);
       res.json(customer);
     } catch (err: any) {
       if (err.message === "Invalid phone parameter") {
@@ -63,7 +72,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.customers.create.path, async (req, res) => {
+  app.post(api.customers.create.path, requireAuth, async (req, res) => {
     try {
       const customer = await createCustomerHandler(storage, req.body);
       res.status(201).json(customer);
@@ -78,9 +87,9 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.customers.update.path, async (req, res) => {
+  app.put(api.customers.update.path, requireAuth, async (req, res) => {
     try {
-      const customer = await updateCustomerHandler(storage, req.params.id, req.body);
+      const customer = await updateCustomerHandler(storage, req.params.id as string, req.body);
       res.status(200).json(customer);
     } catch (err: any) {
       if (err.message === "Invalid ID parameter") {
@@ -98,7 +107,7 @@ export async function registerRoutes(
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const result = await loginHandler(req.body);
+      const result = await loginHandler(req, req.body);
       res.json(result);
     } catch (err: any) {
       if (err.message === "Server not configured") {
@@ -107,6 +116,16 @@ export async function registerRoutes(
       return res.status(401).json({ success: false, message: err.message });
     }
   });
+
+  app.get("/api/auth/me", (req, res) => {
+    res.json(meHandler(req));
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    await logoutHandler(req);
+    res.json({ success: true });
+  });
+
 
   return httpServer;
 }
