@@ -76,6 +76,41 @@ export async function updateCustomerHandler(storage: IStorage, id: string, body:
   return updated;
 }
 
+export async function addPointsHandler(storage: IStorage, id: string, body: any) {
+  const { points } = api.customers.addPoints.input.parse(body);
+
+  const customer = await storage.getCustomer(id);
+  if (!customer) {
+    throw new Error("Customer not found");
+  }
+
+  const updated = await storage.updateCustomer(id, {
+    points: customer.points + points,
+  });
+
+  await storage.appendHistory(id, points);
+  return updated;
+}
+
+export async function redeemPointsHandler(storage: IStorage, id: string) {
+  const REDEEM_COST = 100;
+  const customer = await storage.getCustomer(id);
+  if (!customer) {
+    throw new Error("Customer not found");
+  }
+
+  if (customer.points < REDEEM_COST) {
+    throw new Error("Insufficient points for redemption");
+  }
+
+  const updated = await storage.updateCustomer(id, {
+    points: customer.points - REDEEM_COST,
+  });
+
+  await storage.appendHistory(id, -REDEEM_COST);
+  return updated;
+}
+
 export async function getCustomerHistoryHandler(storage: IStorage, id: string, query: any) {
   if (!id || typeof id !== "string") {
     throw new Error("Invalid ID parameter");

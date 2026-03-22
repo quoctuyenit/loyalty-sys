@@ -10,6 +10,8 @@ import {
   createCustomerHandler,
   updateCustomerHandler,
   getCustomerHistoryHandler,
+  addPointsHandler,
+  redeemPointsHandler,
 } from "./handlers/customers.js";
 import { loginHandler, meHandler } from "./handlers/auth.js";
 import { type Request, type Response, type NextFunction } from "express";
@@ -116,6 +118,39 @@ export async function registerRoutes(
     }
   });
 
+  app.post(api.customers.addPoints.path, requireAuth, async (req, res) => {
+    try {
+      const customer = await addPointsHandler(storage, req.params.id as string, req.body);
+      res.status(200).json(customer);
+    } catch (err: any) {
+      if (err.message === "Customer not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post(api.customers.redeem.path, requireAuth, async (req, res) => {
+    try {
+      const customer = await redeemPointsHandler(storage, req.params.id as string);
+      res.status(200).json(customer);
+    } catch (err: any) {
+      if (err.message === "Customer not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      if (err.message === "Insufficient points for redemption") {
+        return res.status(400).json({ message: err.message });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.post("/api/auth/login", async (req, res) => {
     try {
       const result = await loginHandler(req.body);
@@ -128,8 +163,8 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/auth/me", (req, res) => {
-    res.json(meHandler(req));
+  app.get("/api/auth/me", async (req, res) => {
+    res.json(await meHandler(req));
   });
 
   app.post("/api/auth/logout", async (req, res) => {

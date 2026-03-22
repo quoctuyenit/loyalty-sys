@@ -4,7 +4,7 @@ import { ArrowLeft, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown, Re
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { Button } from "@/components/ui/button";
-import { useCustomer, useUpdateCustomer, useCustomerHistory } from "@/hooks/use-customers";
+import { useCustomer, useAddPoints, useRedeemPoints, useCustomerHistory, useUpdateCustomer } from "@/hooks/use-customers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -24,6 +24,8 @@ function formatHistoryTime(t: number): { date: string; time: string } {
 export function POSCustomerDetail({ id }: { id: string }) {
   const { data: customer, isLoading, isFetching, refetch } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
+  const addPointsMutation = useAddPoints();
+  const redeemMutation = useRedeemPoints();
   const { toast } = useToast();
 
   const [showQR, setShowQR] = useState(false);
@@ -59,8 +61,8 @@ export function POSCustomerDetail({ id }: { id: string }) {
   };
 
   const confirmAddPoints = () => {
-    updateMutation.mutate(
-      { id: customer.id, points: customer.points + pendingPoints },
+    addPointsMutation.mutate(
+      { id: customer.id, points: pendingPoints },
       {
         onSuccess: () => {
           toast({
@@ -88,10 +90,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
       colors: ['#2563eb', '#ff9800', '#ffffff']
     });
 
-    updateMutation.mutate({
-      id: customer.id,
-      points: customer.points - 100
-    }, {
+    redeemMutation.mutate(customer.id, {
       onSuccess: () => {
         toast({
           title: "Reward Redeemed!",
@@ -215,7 +214,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 key={pts}
                 onClick={() => requestAddPoints(pts)}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="h-16 rounded-2xl bg-secondary hover:bg-primary/10 text-primary font-display font-bold text-xl border border-transparent hover:border-primary/20 transition-all"
                 variant="secondary"
               >
@@ -234,7 +233,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
             />
             <Button
               onClick={() => requestAddPoints(Number(customPoints))}
-              disabled={!customPoints || isNaN(Number(customPoints)) || Number(customPoints) <= 0 || updateMutation.isPending}
+              disabled={!customPoints || isNaN(Number(customPoints)) || Number(customPoints) <= 0 || addPointsMutation.isPending}
               className="h-14 px-8 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20"
             >
               Add
@@ -246,7 +245,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
         <div className="pt-6">
           <Button
             onClick={handleRedeem}
-            disabled={customer.points < 100 || updateMutation.isPending}
+            disabled={customer.points < 100 || redeemMutation.isPending}
             className={`w-full h-16 rounded-2xl text-xl font-bold font-display shadow-xl transition-all duration-300 ${customer.points >= 100
               ? "bg-gradient-to-r from-accent to-orange-400 text-white hover:scale-[1.02] shadow-accent/30"
               : "bg-secondary text-muted-foreground shadow-none"
@@ -375,17 +374,17 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 variant="outline"
                 onClick={() => { setShowConfirmDialog(false); setPendingPoints(0); }}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="flex-1 h-12 rounded-2xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={confirmAddPoints}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="flex-1 h-12 rounded-2xl bg-primary text-white font-bold"
               >
-                {updateMutation.isPending ? "Adding..." : "Confirm"}
+                {addPointsMutation.isPending ? "Adding..." : "Confirm"}
               </Button>
             </div>
           </div>
@@ -439,17 +438,17 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 variant="outline"
                 onClick={() => setShowRedeemDialog(false)}
-                disabled={updateMutation.isPending}
+                disabled={redeemMutation.isPending}
                 className="flex-1 h-12 rounded-2xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={confirmRedeem}
-                disabled={updateMutation.isPending}
+                disabled={redeemMutation.isPending}
                 className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-accent to-orange-400 text-white font-bold"
               >
-                {updateMutation.isPending ? "Redeeming..." : "Redeem"}
+                {redeemMutation.isPending ? "Redeeming..." : "Redeem"}
               </Button>
             </div>
           </div>

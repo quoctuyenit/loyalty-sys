@@ -148,6 +148,61 @@ export function useUpdateCustomer() {
   });
 }
 
+export function useAddPoints() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, points }: { id: string; points: number }) => {
+      const url = buildUrl(api.customers.addPoints.path, { id });
+      const data = await fetchApi(url, {
+        method: api.customers.addPoints.method,
+        body: JSON.stringify({ points }),
+      });
+      return api.customers.addPoints.responses[200].parse(data);
+    },
+    onSuccess: (updatedCustomer) => {
+      queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Error adding points",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useRedeemPoints() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const url = buildUrl(api.customers.redeem.path, { id });
+      const data = await fetchApi(url, {
+        method: api.customers.redeem.method,
+      });
+      return api.customers.redeem.responses[200].parse(data);
+    },
+    onSuccess: (updatedCustomer) => {
+      queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Error redeeming points",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 export function useCustomerHistory(id: string, enabled: boolean) {
   return useQuery<HistoryRecord[]>({
     queryKey: ["history", id],

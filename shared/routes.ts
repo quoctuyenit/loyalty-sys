@@ -61,6 +61,28 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    addPoints: {
+      method: 'POST' as const,
+      path: '/api/customers/:id/add-points' as const,
+      input: z.object({
+        points: z.number().positive(),
+      }),
+      responses: {
+        200: z.custom<typeof customers.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    redeem: {
+      method: 'POST' as const,
+      path: '/api/customers/:id/redeem' as const,
+      input: z.object({}).optional(),
+      responses: {
+        200: z.custom<typeof customers.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
     history: {
       method: 'GET' as const,
       path: '/api/customers/:id/history' as const,
