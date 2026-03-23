@@ -31,3 +31,7 @@ export async function meHandler(req: Request) {
     return { authenticated: false };
   }
 }
+
+export async function logoutHandler() {
+  return { success: true, message: "Logged out successfully" };
+}
