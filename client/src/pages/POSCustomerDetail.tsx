@@ -1,20 +1,31 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Plus, Minus, QrCode, Share, CheckCircle2, Edit3 } from "lucide-react";
+import { ArrowLeft, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown, RefreshCw } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { Button } from "@/components/ui/button";
-import { useCustomer, useUpdateCustomer } from "@/hooks/use-customers";
+import { useCustomer, useAddPoints, useRedeemPoints, useCustomerHistory, useUpdateCustomer } from "@/hooks/use-customers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import QRCode from "react-qr-code";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
+import { format, fromUnixTime, isToday } from "date-fns";
+
+function formatHistoryTime(t: number): { date: string; time: string } {
+  const date = fromUnixTime(t);
+  if (isToday(date)) {
+    return { date: "Today", time: format(date, "HH:mm") };
+  }
+  return { date: format(date, "dd/MM/yyyy"), time: format(date, "HH:mm") };
+}
 
 export function POSCustomerDetail({ id }: { id: string }) {
-  console.log("Customer id:", id);
-  const { data: customer, isLoading } = useCustomer(id || "");
+  const { data: customer, isLoading, isFetching, refetch } = useCustomer(id || "");
   const updateMutation = useUpdateCustomer();
+  const addPointsMutation = useAddPoints();
+  const redeemMutation = useRedeemPoints();
   const { toast } = useToast();
 
   const [showQR, setShowQR] = useState(false);
@@ -26,6 +37,10 @@ export function POSCustomerDetail({ id }: { id: string }) {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
   const [editPoints, setEditPoints] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(50);
+
+  const { data: history, isLoading: historyLoading } = useCustomerHistory(id, showHistory);
 
   if (isLoading || !customer) {
     return (
@@ -46,8 +61,8 @@ export function POSCustomerDetail({ id }: { id: string }) {
   };
 
   const confirmAddPoints = () => {
-    updateMutation.mutate(
-      { id: customer.id, points: customer.points + pendingPoints },
+    addPointsMutation.mutate(
+      { id: customer.id, points: pendingPoints },
       {
         onSuccess: () => {
           toast({
@@ -75,10 +90,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
       colors: ['#2563eb', '#ff9800', '#ffffff']
     });
 
-    updateMutation.mutate({
-      id: customer.id,
-      points: customer.points - 100
-    }, {
+    redeemMutation.mutate(customer.id, {
       onSuccess: () => {
         toast({
           title: "Reward Redeemed!",
@@ -137,6 +149,9 @@ export function POSCustomerDetail({ id }: { id: string }) {
     );
   };
 
+  const visibleHistory = history?.slice(0, historyLimit) ?? [];
+  const hasMore = (history?.length ?? 0) > historyLimit;
+
   return (
     <MobileLayout>
       {/* Top Nav */}
@@ -149,6 +164,16 @@ export function POSCustomerDetail({ id }: { id: string }) {
         <div className="flex gap-2">
           <Button variant="ghost" size="icon" onClick={handleShare} className="h-12 w-12 rounded-full text-primary hover:bg-primary/10">
             <Share className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-12 w-12 rounded-full text-primary hover:bg-primary/10"
+            title="Reload"
+          >
+            <RefreshCw className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setShowQR(true)} className="h-12 w-12 rounded-full text-primary hover:bg-primary/10">
             <QrCode className="w-5 h-5" />
@@ -189,7 +214,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 key={pts}
                 onClick={() => requestAddPoints(pts)}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="h-16 rounded-2xl bg-secondary hover:bg-primary/10 text-primary font-display font-bold text-xl border border-transparent hover:border-primary/20 transition-all"
                 variant="secondary"
               >
@@ -208,7 +233,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
             />
             <Button
               onClick={() => requestAddPoints(Number(customPoints))}
-              disabled={!customPoints || isNaN(Number(customPoints)) || Number(customPoints) <= 0 || updateMutation.isPending}
+              disabled={!customPoints || isNaN(Number(customPoints)) || Number(customPoints) <= 0 || addPointsMutation.isPending}
               className="h-14 px-8 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20"
             >
               Add
@@ -216,11 +241,11 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* Redeem Button (Sticky at bottom typically, but inline here for flow) */}
+        {/* Redeem Button */}
         <div className="pt-6">
           <Button
             onClick={handleRedeem}
-            disabled={customer.points < 100 || updateMutation.isPending}
+            disabled={customer.points < 100 || redeemMutation.isPending}
             className={`w-full h-16 rounded-2xl text-xl font-bold font-display shadow-xl transition-all duration-300 ${customer.points >= 100
               ? "bg-gradient-to-r from-accent to-orange-400 text-white hover:scale-[1.02] shadow-accent/30"
               : "bg-secondary text-muted-foreground shadow-none"
@@ -236,7 +261,94 @@ export function POSCustomerDetail({ id }: { id: string }) {
             )}
           </Button>
         </div>
+
+        {/* View History Button */}
+        <div>
+          <Button
+            variant="outline"
+            onClick={() => setShowHistory(true)}
+            className="w-full h-14 rounded-2xl border-border/50 text-muted-foreground font-semibold flex items-center gap-2"
+          >
+            <History className="w-5 h-5" />
+            View History
+          </Button>
+        </div>
       </div>
+
+      {/* History Sheet */}
+      <Sheet open={showHistory} onOpenChange={setShowHistory}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl px-0 pt-0 flex flex-col"
+          style={{ maxHeight: "78dvh", paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        >
+          {/* Handle bar */}
+          <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+
+          <SheetHeader className="px-6 pt-3 pb-4 border-b border-border/50 flex-shrink-0">
+            <SheetTitle className="font-display text-xl text-left text-foreground">
+              {customer.name.split(' ')[0]}'s History
+            </SheetTitle>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {history ? `${history.length} record${history.length !== 1 ? "s" : ""}` : "Loading..."}
+            </p>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+            {historyLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : !history || history.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground">
+                <History className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">No history yet</p>
+                <p className="text-xs mt-1 opacity-60">Point changes will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-2 pb-4">
+                {visibleHistory.map((record, i) => {
+                  const { date, time } = formatHistoryTime(record.t);
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-card border border-border/40 active:scale-[0.98] transition-transform"
+                    >
+                      <div>
+                        <p
+                          className={`text-lg font-display font-bold leading-tight ${record.d > 0 ? "text-green-500" : "text-red-500"
+                            }`}
+                        >
+                          {record.d > 0 ? `+${record.d}` : record.d} pts
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{time}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{date}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {hasMore && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setHistoryLimit((l) => l + 50)}
+                    className="w-full h-12 rounded-2xl text-muted-foreground mt-1 flex items-center gap-2 border border-border/40"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Load more
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Add Points Confirm Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -262,17 +374,17 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 variant="outline"
                 onClick={() => { setShowConfirmDialog(false); setPendingPoints(0); }}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="flex-1 h-12 rounded-2xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={confirmAddPoints}
-                disabled={updateMutation.isPending}
+                disabled={addPointsMutation.isPending}
                 className="flex-1 h-12 rounded-2xl bg-primary text-white font-bold"
               >
-                {updateMutation.isPending ? "Adding..." : "Confirm"}
+                {addPointsMutation.isPending ? "Adding..." : "Confirm"}
               </Button>
             </div>
           </div>
@@ -326,17 +438,17 @@ export function POSCustomerDetail({ id }: { id: string }) {
               <Button
                 variant="outline"
                 onClick={() => setShowRedeemDialog(false)}
-                disabled={updateMutation.isPending}
+                disabled={redeemMutation.isPending}
                 className="flex-1 h-12 rounded-2xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={confirmRedeem}
-                disabled={updateMutation.isPending}
+                disabled={redeemMutation.isPending}
                 className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-accent to-orange-400 text-white font-bold"
               >
-                {updateMutation.isPending ? "Redeeming..." : "Redeem"}
+                {redeemMutation.isPending ? "Redeeming..." : "Redeem"}
               </Button>
             </div>
           </div>
@@ -398,6 +510,6 @@ export function POSCustomerDetail({ id }: { id: string }) {
           </div>
         </DialogContent>
       </Dialog>
-    </MobileLayout>
+    </MobileLayout >
   );
 }

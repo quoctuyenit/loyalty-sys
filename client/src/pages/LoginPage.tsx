@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { KeyRound, LogIn, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileLayout } from "@/components/MobileLayout";
-import { setAuthenticated } from "@/lib/auth";
+import { setToken } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+
 
 export function LoginPage() {
     const [, setLocation] = useLocation();
@@ -31,11 +32,12 @@ export function LoginPage() {
 
             const data = await res.json();
 
-            if (data.success) {
-                setAuthenticated();
+            if (data.success && data.token) {
+                setToken(data.token);
                 toast({ title: "Welcome back!", description: "Logged in successfully." });
                 setLocation("/pos");
             } else {
+
                 setError(data.message || "Invalid secret key.");
             }
         } catch (err) {

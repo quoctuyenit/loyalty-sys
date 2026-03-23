@@ -3,7 +3,10 @@ import express, { type Request, type Response, type NextFunction } from "express
 import { registerRoutes } from "./routes.js";
 import { createServer } from "http";
 
+
+
 const app = express();
+
 const httpServer = createServer(app);
 
 app.use(
@@ -15,6 +18,9 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+app.use(express.urlencoded({ extended: false }));
+
 
 (async () => {
   await registerRoutes(httpServer, app);

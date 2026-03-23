@@ -1,14 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "../../../shared/routes.js";
 import { type InsertCustomer, type UpdateCustomerRequest, type Customer } from "../../../shared/schema.js";
 import { useToast } from "@/hooks/use-toast";
 
+export type HistoryRecord = { t: number; d: number };
+
 // Helper to handle API responses and validation
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem("admin_jwt_token");
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
@@ -40,7 +44,6 @@ export function useCustomer(id: string) {
     queryFn: async () => {
       if (!id) return null;
       const url = buildUrl(api.customers.get.path, { id });
-      console.log("Customer url:", url);
       const data = await fetchApi(url);
       return api.customers.get.responses[200].parse(data);
     },
@@ -97,6 +100,24 @@ export function useCreateCustomer() {
   });
 }
 
+const PAGE_LIMIT = 20;
+
+export function useInfiniteCustomers(search: string) {
+  return useInfiniteQuery<Customer[]>({
+    queryKey: ["customers-infinite", search],
+    queryFn: async ({ pageParam }) => {
+      const url = new URL(api.customers.list.path, window.location.origin);
+      if (search) url.searchParams.set("search", search);
+      url.searchParams.set("limit", String(PAGE_LIMIT));
+      url.searchParams.set("page", String(pageParam));
+      return await fetchApi<Customer[]>(url.toString());
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_LIMIT ? allPages.length + 1 : undefined,
+  });
+}
+
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -115,6 +136,7 @@ export function useUpdateCustomer() {
       queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
       queryClient.invalidateQueries({ queryKey: [api.customers.getByPhone.path] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
     },
     onError: (err: Error) => {
       toast({
@@ -123,5 +145,72 @@ export function useUpdateCustomer() {
         variant: "destructive",
       });
     },
+  });
+}
+
+export function useAddPoints() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, points }: { id: string; points: number }) => {
+      const url = buildUrl(api.customers.addPoints.path, { id });
+      const data = await fetchApi(url, {
+        method: api.customers.addPoints.method,
+        body: JSON.stringify({ points }),
+      });
+      return api.customers.addPoints.responses[200].parse(data);
+    },
+    onSuccess: (updatedCustomer) => {
+      queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Error adding points",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useRedeemPoints() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const url = buildUrl(api.customers.redeem.path, { id });
+      const data = await fetchApi(url, {
+        method: api.customers.redeem.method,
+      });
+      return api.customers.redeem.responses[200].parse(data);
+    },
+    onSuccess: (updatedCustomer) => {
+      queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.customers.get.path, updatedCustomer.id] });
+      queryClient.invalidateQueries({ queryKey: ["history", updatedCustomer.id] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Error redeeming points",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useCustomerHistory(id: string, enabled: boolean) {
+  return useQuery<HistoryRecord[]>({
+    queryKey: ["history", id],
+    queryFn: async () => {
+      const url = buildUrl(api.customers.history.path, { id });
+      return await fetchApi<HistoryRecord[]>(url);
+    },
+    enabled: !!id && enabled,
+    staleTime: 0,
   });
 }

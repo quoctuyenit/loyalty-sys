@@ -1,21 +1,24 @@
 import { db } from "./db.js";
-import { customers, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "../shared/schema.js";
-import { eq, ilike } from "drizzle-orm";
+import { customers, pointHistory, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "../shared/schema.js";
+import { eq, ilike, desc } from "drizzle-orm";
 
 export interface IStorage {
-  getCustomers(search?: string): Promise<Customer[]>;
+  getCustomers(search?: string, limit?: number, offset?: number): Promise<Customer[]>;
   getCustomer(id: string): Promise<Customer | undefined>;
   getCustomerByPhone(phone: string): Promise<Customer | undefined>;
   createCustomer(customer: CreateCustomerRequest): Promise<Customer>;
   updateCustomer(id: string, updates: UpdateCustomerRequest): Promise<Customer>;
+  appendHistory(customerId: string, delta: number): Promise<void>;
+  getCustomerHistory(customerId: string, limit?: number): Promise<{ t: number; d: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getCustomers(search?: string): Promise<Customer[]> {
+  async getCustomers(search?: string, limit = 20, offset = 0): Promise<Customer[]> {
+    const query = db.select().from(customers);
     if (search) {
-      return await db.select().from(customers).where(ilike(customers.phone, `%${search}%`));
+      return await query.where(ilike(customers.phone, `%${search}%`)).limit(limit).offset(offset);
     }
-    return await db.select().from(customers);
+    return await query.limit(limit).offset(offset);
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {
@@ -39,6 +42,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(customers.id, id))
       .returning();
     return updated;
+  }
+
+  async appendHistory(customerId: string, delta: number): Promise<void> {
+    const t = Math.floor(Date.now() / 1000);
+    await db.insert(pointHistory).values({ t, cid: customerId, d: delta });
+  }
+
+  async getCustomerHistory(customerId: string, limit = 50): Promise<{ t: number; d: number }[]> {
+    const rows = await db
+      .select({ t: pointHistory.t, d: pointHistory.d })
+      .from(pointHistory)
+      .where(eq(pointHistory.cid, customerId))
+      .orderBy(desc(pointHistory.t))
+      .limit(limit);
+    return rows;
   }
 }
 
