@@ -16,6 +16,7 @@ import {
 import { loginHandler, meHandler } from "./handlers/auth.js";
 import { type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { logout } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret-change-in-production";
 
@@ -168,7 +169,7 @@ export async function registerRoutes(
   });
 
   app.post("/api/auth/logout", async (req, res) => {
-    res.json({ success: true });
+    res.json(await logout());
   });
 
 
