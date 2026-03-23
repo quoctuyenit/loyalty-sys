@@ -1,6 +1,7 @@
 import { api } from "../../shared/routes.js";
 import { makeId } from "../utils.js";
 import type { IStorage } from "../storage.js";
+import { REDEEM_COST } from "../../shared/constants.js";
 
 export async function listCustomersHandler(storage: IStorage, query: any) {
   const search = query.search as string | undefined;
@@ -93,7 +94,6 @@ export async function addPointsHandler(storage: IStorage, id: string, body: any)
 }
 
 export async function redeemPointsHandler(storage: IStorage, id: string) {
-  const REDEEM_COST = 100;
   const customer = await storage.getCustomer(id);
   if (!customer) {
     throw new Error("Customer not found");
