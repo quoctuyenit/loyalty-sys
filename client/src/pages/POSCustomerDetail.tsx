@@ -12,6 +12,7 @@ import QRCode from "react-qr-code";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { format, fromUnixTime, isToday } from "date-fns";
+import { REDEEM_COST } from "@shared/constants";
 
 function formatHistoryTime(t: number): { date: string; time: string } {
   const date = fromUnixTime(t);
@@ -78,13 +79,13 @@ export function POSCustomerDetail({ id }: { id: string }) {
   };
 
   const handleRedeem = () => {
-    if (customer.points < 100) return;
+    if (customer.points < REDEEM_COST) return;
     setShowRedeemDialog(true);
   };
 
   const confirmRedeem = () => {
     confetti({
-      particleCount: 100,
+      particleCount: REDEEM_COST,
       spread: 70,
       origin: { y: 0.6 },
       colors: ['#2563eb', '#ff9800', '#ffffff']
@@ -94,7 +95,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
       onSuccess: () => {
         toast({
           title: "Reward Redeemed!",
-          description: "100 points have been deducted.",
+          description: `${REDEEM_COST} points have been deducted.`,
         });
         setShowRedeemDialog(false);
       }
@@ -204,7 +205,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
         </div>
 
         {/* Progress Card */}
-        <RewardProgress points={customer.points} target={100} />
+        <RewardProgress points={customer.points} target={REDEEM_COST} />
 
         {/* Action Grid */}
         <div className="space-y-4">
@@ -245,16 +246,16 @@ export function POSCustomerDetail({ id }: { id: string }) {
         <div className="pt-6">
           <Button
             onClick={handleRedeem}
-            disabled={customer.points < 100 || redeemMutation.isPending}
-            className={`w-full h-16 rounded-2xl text-xl font-bold font-display shadow-xl transition-all duration-300 ${customer.points >= 100
+            disabled={customer.points < REDEEM_COST || redeemMutation.isPending}
+            className={`w-full h-16 rounded-2xl text-xl font-bold font-display shadow-xl transition-all duration-300 ${customer.points >= REDEEM_COST
               ? "bg-gradient-to-r from-accent to-orange-400 text-white hover:scale-[1.02] shadow-accent/30"
               : "bg-secondary text-muted-foreground shadow-none"
               }`}
           >
-            {customer.points >= 100 ? (
+            {customer.points >= REDEEM_COST ? (
               <>
                 <CheckCircle2 className="w-6 h-6 mr-2" />
-                Redeem Reward (-100 pts)
+                Redeem Reward (-{REDEEM_COST} pts)
               </>
             ) : (
               "Not enough points to redeem"
@@ -428,11 +429,11 @@ export function POSCustomerDetail({ id }: { id: string }) {
             </div>
             <div className="flex items-center justify-between text-sm px-1">
               <span className="text-muted-foreground">Points deducted</span>
-              <span className="font-bold text-destructive">-100 pts</span>
+              <span className="font-bold text-destructive">-{REDEEM_COST} pts</span>
             </div>
             <div className="flex items-center justify-between text-sm px-1 border-t border-border pt-3">
               <span className="text-muted-foreground">Remaining balance</span>
-              <span className="font-bold text-primary">{customer.points - 100} pts</span>
+              <span className="font-bold text-primary">{customer.points - REDEEM_COST} pts</span>
             </div>
             <div className="flex gap-3 pt-2">
               <Button

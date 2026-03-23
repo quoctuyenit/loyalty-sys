@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  define: {
+    "process.env.REDEEM_COST": JSON.stringify(process.env.REDEEM_COST || 100),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
