@@ -21,6 +21,7 @@ Before starting, ensure you have the following installed:
    - `DATABASE_URL`: The connection string for your PostgreSQL database.
      - Example: `postgres://user:password@localhost:5432/dbname`
    - `ADMIN_SECRET_KEY`: A secret string used for administrative operations or signing tokens. Choose a secure, random string.
+   - `REDEEM_COST`: The cost of redeeming points. Default is 100.
 
 ## Installation
 
