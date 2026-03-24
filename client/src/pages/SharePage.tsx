@@ -5,6 +5,7 @@ import { useCustomer } from "@/hooks/use-customers";
 import { Skeleton } from "@/components/ui/skeleton";
 import QRCode from "react-qr-code";
 import { QrCode } from "lucide-react";
+import { REDEEM_COST } from "@shared/constants";
 
 export function SharePage() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,7 @@ export function SharePage() {
 
         {/* Main Progress */}
         <div className="mt-8">
-          <RewardProgress points={customer.points} target={100} showGiftAnimation={true} />
+          <RewardProgress points={customer.points} target={REDEEM_COST} showGiftAnimation={true} />
         </div>
 
         {/* QR Code Pass */}
