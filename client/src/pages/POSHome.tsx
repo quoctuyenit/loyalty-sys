@@ -56,7 +56,7 @@ export function POSHome() {
   return (
     <MobileLayout>
       {/* Header */}
-      <div className="px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10 bg-[#9fb6cd]">
+      <div className="px-6 pt-12 pb-6 text-primary-foreground rounded-b-3xl shadow-lg relative z-10 bg-[#9fb6cd] shrink-0">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold" style={{ fontFamily: "'Kavoon', cursive" }}>Herty System</h1>
           <Button

@@ -18,9 +18,9 @@ export class DatabaseStorage implements IStorage {
   async getCustomers(search?: string, limit = 20, offset = 0): Promise<Customer[]> {
     const query = db.select().from(customers);
     if (search) {
-      return await query.where(ilike(customers.phone, `%${search}%`)).limit(limit).offset(offset);
+      return await query.where(ilike(customers.phone, `%${search}%`)).orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
     }
-    return await query.limit(limit).offset(offset);
+    return await query.orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {

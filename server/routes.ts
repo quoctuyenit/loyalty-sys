@@ -92,6 +92,9 @@ export async function registerRoutes(
       const customer = await createCustomerHandler(storage, req.body);
       res.status(201).json(customer);
     } catch (err: any) {
+      if (err.message === "Phone number is already registered.") {
+        return res.status(400).json({ message: err.message });
+      }
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
@@ -107,7 +110,7 @@ export async function registerRoutes(
       const customer = await updateCustomerHandler(storage, req.params.id as string, req.body);
       res.status(200).json(customer);
     } catch (err: any) {
-      if (err.message === "Invalid ID parameter") {
+      if (err.message === "Invalid ID parameter" || err.message === "Phone number is already registered to another customer.") {
         return res.status(400).json({ message: err.message });
       }
       if (err instanceof z.ZodError) {
