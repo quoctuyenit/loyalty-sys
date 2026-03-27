@@ -42,3 +42,5 @@ vite.config.ts.*
 coverage/
 .vercel
 .env*.local
+/.agent
+*.md
