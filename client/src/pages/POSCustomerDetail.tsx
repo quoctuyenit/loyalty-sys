@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown, RefreshCw } from "lucide-react";
+import { ArrowLeft, QrCode, Share, CheckCircle2, Edit3, History, ChevronDown, RefreshCw, CalendarClock } from "lucide-react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { Button } from "@/components/ui/button";
 import { useCustomer, useAddPoints, useRedeemPoints, useCustomerHistory, useUpdateCustomer } from "@/hooks/use-customers";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@shared/routes";
+import { useConfig, computeExpiryDate, formatExpiryDate } from "@/hooks/use-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -23,8 +26,13 @@ function formatHistoryTime(t: number): { date: string; time: string } {
 }
 
 export function POSCustomerDetail({ id }: { id: string }) {
-  const { data: customer, isLoading, isFetching, refetch } = useCustomer(id || "");
+  const { data: customer, isLoading, isError, error, isFetching, refetch } = useCustomer(id || "");
+  const { data: config } = useConfig();
   const updateMutation = useUpdateCustomer();
+  const expiryDate = computeExpiryDate(
+    customer?.firstPointAt,
+    config?.pointsExpiryMonths ?? 12
+  );
   const addPointsMutation = useAddPoints();
   const redeemMutation = useRedeemPoints();
   const { toast } = useToast();
@@ -42,14 +50,42 @@ export function POSCustomerDetail({ id }: { id: string }) {
   const [historyLimit, setHistoryLimit] = useState(50);
 
   const { data: history, isLoading: historyLoading } = useCustomerHistory(id, showHistory);
+  const queryClient = useQueryClient();
 
-  if (isLoading || !customer) {
+  useEffect(() => {
+    if (isError) {
+      // Invalidate the customers list so the listing page refetches without the deleted customer
+      queryClient.invalidateQueries({ queryKey: [api.customers.list.path] });
+      queryClient.invalidateQueries({ queryKey: ["customers-infinite"] });
+    }
+  }, [isError, queryClient]);
+
+  if (isLoading) {
     return (
       <MobileLayout>
         <div className="p-6 space-y-6">
           <Skeleton className="w-10 h-10 rounded-full mb-8" />
           <Skeleton className="h-10 w-3/4" />
           <Skeleton className="h-48 w-full rounded-3xl" />
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  if (isError || !customer) {
+    return (
+      <MobileLayout>
+        <div className="flex flex-col items-center justify-center p-6 space-y-4 min-h-[70vh]">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2">
+            <span className="text-red-500 font-bold text-3xl">!</span>
+          </div>
+          <h2 className="text-2xl font-bold font-display text-center">Customer Not Found</h2>
+          <p className="text-muted-foreground text-center mb-6">
+            {error instanceof Error ? error.message : "This customer account may have been removed or expired."}
+          </p>
+          <Link href="/pos">
+            <Button className="rounded-2xl h-12 px-8 font-bold text-lg w-full">Go Back</Button>
+          </Link>
         </div>
       </MobileLayout>
     );
@@ -207,6 +243,17 @@ export function POSCustomerDetail({ id }: { id: string }) {
         {/* Progress Card */}
         <RewardProgress points={customer.points} target={REDEEM_COST} />
 
+        {/* Expiry Date */}
+        {expiryDate && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+            <CalendarClock className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Points expire on</p>
+              <p className="text-sm font-bold text-amber-900">{formatExpiryDate(expiryDate)}</p>
+            </div>
+          </div>
+        )}
+
         {/* Action Grid */}
         <div className="space-y-4">
           <h3 className="font-bold text-lg px-1">Quick Add Points</h3>
@@ -353,7 +400,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
 
       {/* Add Points Confirm Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-[360px] rounded-3xl p-8">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[360px] rounded-3xl p-8">
           <DialogHeader className="mb-4">
             <DialogTitle className="font-display text-2xl">Confirm Add Points</DialogTitle>
           </DialogHeader>
@@ -394,7 +441,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
 
       {/* QR Dialog */}
       <Dialog open={showQR} onOpenChange={setShowQR}>
-        <DialogContent className="sm:max-w-[360px] rounded-3xl p-8 flex flex-col items-center">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[360px] rounded-3xl p-8 flex flex-col items-center">
           <DialogHeader className="mb-4 w-full text-center">
             <DialogTitle className="font-display text-2xl mx-auto">Customer QR</DialogTitle>
           </DialogHeader>
@@ -414,7 +461,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
 
       {/* Redeem Confirm Dialog */}
       <Dialog open={showRedeemDialog} onOpenChange={setShowRedeemDialog}>
-        <DialogContent className="sm:max-w-[360px] rounded-3xl p-8">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[360px] rounded-3xl p-8">
           <DialogHeader className="mb-4">
             <DialogTitle className="font-display text-2xl">Confirm Redemption</DialogTitle>
           </DialogHeader>
@@ -458,7 +505,7 @@ export function POSCustomerDetail({ id }: { id: string }) {
 
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[360px] rounded-3xl p-8">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[360px] rounded-3xl p-8">
           <DialogHeader className="mb-6">
             <DialogTitle className="font-display text-2xl">Edit Customer</DialogTitle>
           </DialogHeader>

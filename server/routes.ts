@@ -14,6 +14,7 @@ import {
   redeemPointsHandler,
 } from "./handlers/customers.js";
 import { loginHandler, meHandler } from "./handlers/auth.js";
+import { runExpiry } from "./cron.js";
 import { type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { logout } from "@/lib/auth";
@@ -150,6 +151,29 @@ export async function registerRoutes(
       }
       res.status(500).json({ message: err.message });
     }
+  });
+
+  app.get("/api/cron/expiry", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      const authHeader = req.headers.authorization;
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        return res.status(401).json({ error: "Unauthorized cron request" });
+      }
+    }
+    
+    try {
+      const result = await runExpiry();
+      res.json(result);
+    } catch(err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/config", (_req, res) => {
+    res.json({
+      pointsExpiryMonths: Math.max(1, parseInt(process.env.POINTS_EXPIRY_MONTHS || "12", 10) || 12),
+    });
   });
 
   app.post("/api/auth/login", async (req, res) => {
