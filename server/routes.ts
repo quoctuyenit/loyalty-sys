@@ -13,11 +13,10 @@ import {
   addPointsHandler,
   redeemPointsHandler,
 } from "./handlers/customers.js";
-import { loginHandler, meHandler } from "./handlers/auth.js";
+import { loginHandler, meHandler, logoutHandler } from "./handlers/auth.js";
 import { runExpiry } from "./cron.js";
 import { type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { logout } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret-change-in-production";
 
@@ -196,7 +195,11 @@ export async function registerRoutes(
   });
 
   app.post("/api/auth/logout", async (req, res) => {
-    res.json(await logout());
+    try {
+      res.json(await logoutHandler());
+    } catch(err: any) {
+      res.status(500).json({ success: false, message: err.message });
+    }
   });
 
 
