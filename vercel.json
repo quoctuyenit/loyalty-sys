@@ -13,7 +13,7 @@
   "crons": [
     {
       "path": "/api/cron/expiry",
-      "schedule": "14 20 * * *",
+      "schedule": "0 17 * * *",
       "description": "00:00 Vietnam time (UTC+7)"
     }
   ]
