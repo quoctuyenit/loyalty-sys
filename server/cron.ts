@@ -1,5 +1,15 @@
 import { storage } from "./storage.js";
-import { log } from "./index.js";
+
+function log(message: string, source = "cron") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+
 
 function getExpiryMonths(): number {
     return Math.max(1, parseInt(process.env.POINTS_EXPIRY_MONTHS || "12", 10) || 12);
