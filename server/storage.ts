@@ -1,6 +1,6 @@
 import { db } from "./db.js";
 import { customers, pointHistory, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "../shared/schema.js";
-import { eq, ilike, desc } from "drizzle-orm";
+import { eq, ilike, desc, gt } from "drizzle-orm";
 
 export interface IStorage {
   getCustomers(search?: string, limit?: number, offset?: number): Promise<Customer[]>;
@@ -10,15 +10,17 @@ export interface IStorage {
   updateCustomer(id: string, updates: UpdateCustomerRequest): Promise<Customer>;
   appendHistory(customerId: string, delta: number): Promise<void>;
   getCustomerHistory(customerId: string, limit?: number): Promise<{ t: number; d: number }[]>;
+  getCustomersWithPoints(): Promise<Customer[]>;
+  expireCustomer(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   async getCustomers(search?: string, limit = 20, offset = 0): Promise<Customer[]> {
     const query = db.select().from(customers);
     if (search) {
-      return await query.where(ilike(customers.phone, `%${search}%`)).limit(limit).offset(offset);
+      return await query.where(ilike(customers.phone, `%${search}%`)).orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
     }
-    return await query.limit(limit).offset(offset);
+    return await query.orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {
@@ -47,6 +49,21 @@ export class DatabaseStorage implements IStorage {
   async appendHistory(customerId: string, delta: number): Promise<void> {
     const t = Math.floor(Date.now() / 1000);
     await db.insert(pointHistory).values({ t, cid: customerId, d: delta });
+    if (delta > 0) {
+      const customer = await this.getCustomer(customerId);
+      if (customer && !customer.firstPointAt) {
+        await db.update(customers).set({ firstPointAt: t }).where(eq(customers.id, customerId));
+      }
+    }
+  }
+
+  async getCustomersWithPoints(): Promise<Customer[]> {
+    return await db.select().from(customers).where(gt(customers.points, 0));
+  }
+
+  async expireCustomer(id: string): Promise<void> {
+    await db.delete(pointHistory).where(eq(pointHistory.cid, id));
+    await db.delete(customers).where(eq(customers.id, id));
   }
 
   async getCustomerHistory(customerId: string, limit = 50): Promise<{ t: number; d: number }[]> {

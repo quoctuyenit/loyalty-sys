@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AuthGuard } from "@/components/AuthGuard";
+import { GlobalLoader } from "@/components/GlobalLoader";
 
 // Pages
 import { POSHome } from "./pages/POSHome";
@@ -41,6 +42,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <GlobalLoader />
         <Toaster />
         <Router>
           <AppRoutes />

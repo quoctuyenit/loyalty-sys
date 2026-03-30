@@ -13,10 +13,10 @@ import {
   addPointsHandler,
   redeemPointsHandler,
 } from "./handlers/customers.js";
-import { loginHandler, meHandler } from "./handlers/auth.js";
+import { loginHandler, meHandler, logoutHandler } from "./handlers/auth.js";
+import { runExpiry } from "./cron.js";
 import { type Request, type Response, type NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { logout } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret-change-in-production";
 
@@ -91,6 +91,9 @@ export async function registerRoutes(
       const customer = await createCustomerHandler(storage, req.body);
       res.status(201).json(customer);
     } catch (err: any) {
+      if (err.message === "Phone number is already registered.") {
+        return res.status(400).json({ message: err.message });
+      }
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
@@ -106,7 +109,7 @@ export async function registerRoutes(
       const customer = await updateCustomerHandler(storage, req.params.id as string, req.body);
       res.status(200).json(customer);
     } catch (err: any) {
-      if (err.message === "Invalid ID parameter") {
+      if (err.message === "Invalid ID parameter" || err.message === "Phone number is already registered to another customer.") {
         return res.status(400).json({ message: err.message });
       }
       if (err instanceof z.ZodError) {
@@ -152,6 +155,29 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/cron/expiry", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      const authHeader = req.headers.authorization;
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        return res.status(401).json({ error: "Unauthorized cron request" });
+      }
+    }
+    
+    try {
+      const result = await runExpiry();
+      res.json(result);
+    } catch(err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/config", (_req, res) => {
+    res.json({
+      pointsExpiryMonths: Math.max(1, parseInt(process.env.POINTS_EXPIRY_MONTHS || "12", 10) || 12),
+    });
+  });
+
   app.post("/api/auth/login", async (req, res) => {
     try {
       const result = await loginHandler(req.body);
@@ -169,7 +195,11 @@ export async function registerRoutes(
   });
 
   app.post("/api/auth/logout", async (req, res) => {
-    res.json(await logout());
+    try {
+      res.json(await logoutHandler());
+    } catch(err: any) {
+      res.status(500).json({ success: false, message: err.message });
+    }
   });
 
 

@@ -37,6 +37,11 @@ export async function getCustomerByPhoneHandler(storage: IStorage, phone: string
 export async function createCustomerHandler(storage: IStorage, body: any) {
   const input = api.customers.create.input.parse(body);
 
+  const existingWithPhone = await storage.getCustomerByPhone(input.phone);
+  if (existingWithPhone) {
+    throw new Error("Phone number is already registered.");
+  }
+
   let newId = makeId();
   while (await storage.getCustomer(newId)) {
     newId = makeId();
@@ -65,6 +70,14 @@ export async function updateCustomerHandler(storage: IStorage, id: string, body:
   }
 
   const input = api.customers.update.input.parse(body);
+
+  if (input.phone && input.phone !== existing.phone) {
+    const existingWithPhone = await storage.getCustomerByPhone(input.phone);
+    if (existingWithPhone) {
+      throw new Error("Phone number is already registered to another customer.");
+    }
+  }
+
   const updated = await storage.updateCustomer(id, input);
 
   if (typeof input.points === "number") {

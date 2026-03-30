@@ -2,13 +2,22 @@ import { useParams } from "wouter";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { useCustomer } from "@/hooks/use-customers";
+import { useConfig, computeExpiryDate, formatExpiryDate } from "@/hooks/use-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import QRCode from "react-qr-code";
-import { QrCode } from "lucide-react";
+import { QrCode, RefreshCw, CalendarClock } from "lucide-react";
+import { REDEEM_COST } from "@shared/constants";
 
 export function SharePage() {
   const { id } = useParams<{ id: string }>();
-  const { data: customer, isLoading, error } = useCustomer(id || "");
+  const { data: customer, isLoading, isFetching, refetch, error } = useCustomer(id || "");
+  const { data: config } = useConfig();
+
+  const expiryDate = computeExpiryDate(
+    customer?.firstPointAt,
+    config?.pointsExpiryMonths ?? 12
+  );
 
   if (isLoading) {
     return (
@@ -41,6 +50,20 @@ export function SharePage() {
       {/* Decorative Header Background */}
       <div className="absolute top-0 left-0 w-full h-64 bg-primary rounded-b-[40px] -z-10" />
 
+      {/* Refresh button */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 text-black/70 hover:text-black"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
+
       <div className="px-6 pt-16 pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Welcome Text */}
@@ -55,12 +78,22 @@ export function SharePage() {
 
         {/* Main Progress */}
         <div className="mt-8">
-          <RewardProgress points={customer.points} target={100} showGiftAnimation={true} />
+          <RewardProgress points={customer.points} target={REDEEM_COST} showGiftAnimation={true} />
         </div>
+
+        {/* Expiry Date */}
+        {expiryDate && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+            <CalendarClock className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Points expire on</p>
+              <p className="text-sm font-bold text-amber-900">{formatExpiryDate(expiryDate)}</p>
+            </div>
+          </div>
+        )}
 
         {/* QR Code Pass */}
         <div className="bg-card rounded-3xl p-8 shadow-xl border border-border/50 flex flex-col items-center relative overflow-hidden mt-8">
-          {/* Subtle decoration */}
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
 

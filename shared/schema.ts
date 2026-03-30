@@ -8,6 +8,7 @@ export const customers = pgTable("customers", {
   name: varchar("name", { length: 50 }).notNull(),
   points: integer("points").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
+  firstPointAt: integer("first_point_at"),
 });
 
 export type Customer = typeof customers.$inferSelect;

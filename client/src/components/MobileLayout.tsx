@@ -78,7 +78,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
         </div>
       )}
       <div
-        className="flex flex-col flex-1"
+        className="flex flex-col flex-1 min-h-0 h-full overflow-y-auto no-scrollbar"
         style={{
           transform: pullY > 0 ? `translateY(${pullY}px)` : "none",
           transition: pullY === 0 ? "transform 0.25s ease" : "none",
