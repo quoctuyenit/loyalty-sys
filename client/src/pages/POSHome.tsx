@@ -77,7 +77,7 @@ export function POSHome() {
             </div>
             <Input
               type="text"
-              placeholder="Search phone ..."
+              placeholder="Search anything..."
               className="h-14 w-full pl-12 pr-4 rounded-2xl bg-white text-foreground text-lg placeholder:text-muted-foreground shadow-inner border-0 focus-visible:ring-2 focus-visible:ring-white/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
