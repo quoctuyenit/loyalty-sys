@@ -1,6 +1,6 @@
 import { db } from "./db.js";
 import { customers, pointHistory, type CreateCustomerRequest, type UpdateCustomerRequest, type Customer } from "../shared/schema.js";
-import { eq, ilike, desc, gt } from "drizzle-orm";
+import { eq, ilike, or, desc, gt } from "drizzle-orm";
 
 export interface IStorage {
   getCustomers(search?: string, limit?: number, offset?: number): Promise<Customer[]>;
@@ -17,8 +17,13 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getCustomers(search?: string, limit = 20, offset = 0): Promise<Customer[]> {
     const query = db.select().from(customers);
+    search = search ? search.trim() : '';
     if (search) {
-      return await query.where(ilike(customers.phone, `%${search}%`)).orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
+      return await query
+        .where(or(ilike(customers.phone, `%${search}%`), ilike(customers.name, `%${search}%`)))
+        .orderBy(desc(customers.createdAt))
+        .limit(limit)
+        .offset(offset);
     }
     return await query.orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
   }
