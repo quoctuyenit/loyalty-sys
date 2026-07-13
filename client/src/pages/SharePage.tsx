@@ -10,10 +10,12 @@ import QRCode from "react-qr-code";
 import { QrCode, RefreshCw, CalendarClock } from "lucide-react";
 import { REDEEM_COST } from "@shared/constants";
 import { checkAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 export function SharePage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [isRedirecting, setIsRedirecting] = useState(true);
 
   useEffect(() => {
@@ -130,7 +132,15 @@ export function SharePage() {
 
           <h3 className="font-display font-bold text-xl text-foreground mb-6">Your Pass</h3>
 
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-100 mb-6">
+          <div
+            className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-100 mb-6 cursor-pointer active:scale-95 transition-transform relative group"
+            onClick={() => {
+              navigator.clipboard.writeText(customer.id);
+              toast({
+                title: "Đã copy mã khách hàng!"
+              });
+            }}
+          >
             <QRCode
               value={customer.id}
               size={200}
