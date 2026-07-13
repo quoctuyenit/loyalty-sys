@@ -43,16 +43,16 @@ export function POSHome() {
     }
 
     if (id && id.length >= 4 && id.length <= 20 && /^[a-zA-Z0-9_-]+$/.test(id)) {
+      // Clear clipboard immediately while user gesture is still fresh (iOS requirement)
+      try {
+        await navigator.clipboard.writeText(" ");
+      } catch (e) {
+        console.warn("Could not clear clipboard early", e);
+      }
+
       try {
         const res = await fetch(`/api/customers/${id}`);
         if (res.ok) {
-          // Try to clear clipboard, but don't fail if iOS blocks it due to lost user gesture
-          try {
-            await navigator.clipboard.writeText(" ");
-          } catch (e) {
-            console.warn("Could not clear clipboard", e);
-          }
-
           toast({
             title: "Nhận diện khách hàng thành công"
           });
