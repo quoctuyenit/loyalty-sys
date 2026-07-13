@@ -7,7 +7,7 @@ import { useConfig, computeExpiryDate, formatExpiryDate } from "@/hooks/use-conf
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import QRCode from "react-qr-code";
-import { QrCode, RefreshCw, CalendarClock } from "lucide-react";
+import { QrCode, RefreshCw, CalendarClock, Compass } from "lucide-react";
 import { REDEEM_COST } from "@shared/constants";
 import { checkAuth } from "@/lib/auth";
 
@@ -15,6 +15,7 @@ export function SharePage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [isRedirecting, setIsRedirecting] = useState(true);
+  const [showIosInstruction, setShowIosInstruction] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -28,6 +29,10 @@ export function SharePage() {
         if (/android/i.test(ua)) {
           const url = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;end`;
           window.location.replace(url);
+          return;
+        } else if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
+          setShowIosInstruction(true);
+          setIsRedirecting(false);
           return;
         }
       }
@@ -49,6 +54,22 @@ export function SharePage() {
     customer?.firstPointAt,
     config?.pointsExpiryMonths ?? 12
   );
+
+  if (showIosInstruction) {
+    return (
+      <MobileLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] p-8 text-center space-y-6">
+          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-2 animate-bounce">
+            <Compass className="w-12 h-12" />
+          </div>
+          <h1 className="text-2xl font-bold font-display text-foreground">Mở bằng trình duyệt</h1>
+          <p className="text-muted-foreground text-[1.1rem] leading-relaxed">
+            Để lưu thẻ tích điểm, vui lòng nhấn vào biểu tượng <strong className="text-foreground text-xl">•••</strong> ở góc màn hình và chọn <strong className="text-foreground">Mở bằng trình duyệt</strong> hoặc <strong className="text-foreground">Open in Safari</strong>.
+          </p>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   if (isRedirecting || isLoading) {
     return (
