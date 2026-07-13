@@ -105,7 +105,7 @@ export function SharePage() {
             Loyalty Pass
           </p>
           <h1 className="text-4xl font-display font-bold leading-tight">
-            Hi, {customer.name.split(' ')[0]}!
+            Hi, {customer.name}!
           </h1>
         </div>
 
