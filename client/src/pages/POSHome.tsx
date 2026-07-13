@@ -34,26 +34,37 @@ export function POSHome() {
   };
 
   const handleScanClick = async () => {
+    let id = "";
     try {
       const text = await navigator.clipboard.readText();
-      const id = text?.trim();
+      id = text?.trim() || "";
+    } catch (err) {
+      // Ignore if clipboard read fails or is denied
+    }
 
-      // Basic check for ID pattern (assuming alphanumeric/dashes, length 4-15)
-      if (id && id.length >= 4 && id.length <= 15 && /^[a-zA-Z0-9_-]+$/.test(id)) {
+    if (id && id.length >= 4 && id.length <= 20 && /^[a-zA-Z0-9_-]+$/.test(id)) {
+      try {
         const res = await fetch(`/api/customers/${id}`);
         if (res.ok) {
-          await navigator.clipboard.writeText(""); // clear clipboard so it doesn't auto-redirect next time
+          // Try to clear clipboard, but don't fail if iOS blocks it due to lost user gesture
+          try {
+            await navigator.clipboard.writeText(" ");
+          } catch (e) {
+            console.warn("Could not clear clipboard", e);
+          }
+
           toast({
             title: "Nhận diện khách hàng thành công"
           });
           setLocation(`/pos/customer/${id}`);
           return;
         }
+      } catch (err) {
+        console.error("Fetch customer error:", err);
       }
-    } catch (err) {
-      // Ignore if clipboard read fails or is denied
     }
 
+    // Fallback to manual scanner
     setLocation("/pos/scan");
   };
 
