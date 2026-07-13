@@ -1,4 +1,5 @@
-import { useParams } from "wouter";
+import { useEffect, useState } from "react";
+import { useParams, useLocation } from "wouter";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RewardProgress } from "@/components/RewardProgress";
 import { useCustomer } from "@/hooks/use-customers";
@@ -8,9 +9,39 @@ import { Button } from "@/components/ui/button";
 import QRCode from "react-qr-code";
 import { QrCode, RefreshCw, CalendarClock } from "lucide-react";
 import { REDEEM_COST } from "@shared/constants";
+import { checkAuth } from "@/lib/auth";
 
 export function SharePage() {
   const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const [isRedirecting, setIsRedirecting] = useState(true);
+
+  useEffect(() => {
+    const init = async () => {
+      const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isFacebook = ua.indexOf("FBAN") > -1 || ua.indexOf("FBAV") > -1;
+      const isInstagram = ua.indexOf("Instagram") > -1;
+      const isZalo = ua.indexOf("Zalo") > -1;
+      const isMessenger = ua.indexOf("Messenger") > -1;
+
+      if (isFacebook || isInstagram || isZalo || isMessenger) {
+        if (/android/i.test(ua)) {
+          const url = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;end`;
+          window.location.replace(url);
+          return;
+        }
+      }
+
+      const isAuthed = await checkAuth();
+      if (isAuthed && id) {
+        setLocation(`/pos/customer/${id}`);
+      } else {
+        setIsRedirecting(false);
+      }
+    };
+    init();
+  }, [id, setLocation]);
+
   const { data: customer, isLoading, isFetching, refetch, error } = useCustomer(id || "");
   const { data: config } = useConfig();
 
@@ -19,7 +50,7 @@ export function SharePage() {
     config?.pointsExpiryMonths ?? 12
   );
 
-  if (isLoading) {
+  if (isRedirecting || isLoading) {
     return (
       <MobileLayout>
         <div className="p-8 space-y-8 pt-24">
