@@ -8,6 +8,7 @@ import { useInfiniteCustomers } from "@/hooks/use-customers";
 import { CreateCustomerDialog } from "@/components/CreateCustomerDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { logout } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 export function POSHome() {
   const [search, setSearch] = useState("");
@@ -15,6 +16,7 @@ export function POSHome() {
   const [, setLocation] = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
+  const { toast } = useToast();
 
   const {
     data,
@@ -29,6 +31,41 @@ export function POSHome() {
   const handleLogout = async () => {
     await logout();
     setLocation("/login");
+  };
+
+  const handleScanClick = async () => {
+    let id = "";
+    try {
+      const text = await navigator.clipboard.readText();
+      id = text?.trim() || "";
+    } catch (err) {
+      // Ignore if clipboard read fails or is denied
+    }
+
+    if (id && id.length >= 4 && id.length <= 20 && /^[a-zA-Z0-9_-]+$/.test(id)) {
+      // Clear clipboard immediately while user gesture is still fresh (iOS requirement)
+      try {
+        await navigator.clipboard.writeText(" ");
+      } catch (e) {
+        console.warn("Could not clear clipboard early", e);
+      }
+
+      try {
+        const res = await fetch(`/api/customers/${id}`);
+        if (res.ok) {
+          toast({
+            title: "Nhận diện khách hàng thành công"
+          });
+          setLocation(`/pos/customer/${id}`);
+          return;
+        }
+      } catch (err) {
+        console.error("Fetch customer error:", err);
+      }
+    }
+
+    // Fallback to manual scanner
+    setLocation("/pos/scan");
   };
 
   const tryLoadMore = useCallback(() => {
@@ -84,7 +121,7 @@ export function POSHome() {
             />
           </div>
           <button
-            onClick={() => setLocation("/pos/scan")}
+            onClick={handleScanClick}
             className="h-14 px-4 rounded-2xl bg-white/20 hover:bg-white/30 active:bg-white/40 border border-white/30 flex items-center gap-2 text-primary-foreground font-semibold transition-colors flex-shrink-0"
           >
             <ScanLine className="w-5 h-5" />
